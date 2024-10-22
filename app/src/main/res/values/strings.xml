@@ -1,0 +1,47 @@
+<resources>
+    <!-- App Name -->
+	<string name="action_settings">Settings</string>
+    <string name="app_name">FlashcardApp</string>
+<string name="first_fragment_label">Flashcard List</string>
+<string name="second_fragment_label">Review Flashcards</string>
+
+    <!-- Main Activity Labels -->
+    <string name="add_flashcard">Add Flashcard</string>
+    <string name="review_flashcards">Review Flashcards</string>
+    <string name="list_all_flashcards">List Flashcards</string>
+    <string name="import_export_flashcards">Import/Export Flashcards</string>
+
+    <!-- Add/Edit Flashcard Screen -->
+    <string name="question_label">Question:</string>
+    <string name="answer_label">Answer:</string>
+    <string name="save_flashcard">Save Flashcard</string>
+    <string name="update_flashcard">Update Flashcard</string>
+    <string name="delete_flashcard">Delete Flashcard</string>
+    <string name="back">Back</string>
+    <string name="flashcard_saved">Flashcard saved!</string>
+    <string name="flashcard_updated">Flashcard updated!</string>
+    <string name="flashcard_deleted">Flashcard deleted!</string>
+    <string name="enter_question_answer">Please enter both question and answer.</string>
+
+    <!-- Review Flashcard Screen -->
+    <string name="review_flashcard">Review Flashcard</string>
+    <string name="show_answer">Show Answer</string>
+    <string name="rate_recall_quality">Rate your recall quality (0-5):</string>
+    <string name="no_flashcards_due">No flashcards due for review.</string>
+    <string name="review_complete">Review session completed!</string>
+
+    <!-- Import/Export Flashcards -->
+    <string name="import_flashcards">Import Flashcards</string>
+    <string name="export_flashcards">Export Flashcards</string>
+    <string name="import_successful">Flashcards imported successfully!</string>
+    <string name="export_successful">Flashcards exported successfully!</string>
+    <string name="file_not_found">The specified file does not exist.</string>
+
+    <!-- Miscellaneous Labels -->
+    <string name="flashcard_id">Flashcard ID:</string>
+    <string name="easiness_factor">Easiness Factor:</string>
+    <string name="repetition">Repetition:</string>
+    <string name="interval">Interval:</string>
+    <string name="next_review">Next Review:</string>
+    <string name="input_error">Input error: Please check your inputs.</string>
+</resources>

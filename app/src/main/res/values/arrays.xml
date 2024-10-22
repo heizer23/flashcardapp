@@ -1,0 +1,10 @@
+<resources>
+    <string-array name="quality_ratings">
+        <item>5 - Perfect response</item>
+        <item>4 - Correct response after hesitation</item>
+        <item>3 - Correct response with difficulty</item>
+        <item>2 - Incorrect response but remembered</item>
+        <item>1 - Incorrect but seemed easy to recall</item>
+        <item>0 - Complete blackout</item>
+    </string-array>
+</resources>
