@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
          });
 
          btnImportExport.setOnClickListener(v -> {
-             Intent intent = new Intent(MainActivity.this, ImportExportActivity.class);
+             Intent intent = new Intent(MainActivity.this, ImportFlashcardsActivity.class);
              startActivity(intent);
          });
     }

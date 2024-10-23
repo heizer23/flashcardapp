@@ -8,21 +8,33 @@
 
     <TextView
         android:id="@+id/tv_question"
-        android:textSize="16sp"
+        android:text="Question"
         android:layout_weight="1"
         android:layout_width="0dp"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:id="@+id/btn_edit"
-        android:text="Edit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:id="@+id/btn_delete"
-        android:text="Delete"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="4dp" />
+        android:padding="4dp" />
+
+    <TextView
+        android:id="@+id/tv_answer"
+        android:text="Answer"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="4dp" />
+
+    <TextView
+        android:id="@+id/tv_time_difference"
+        android:text="Time Diff"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="4dp" />
+
+    <TextView
+        android:id="@+id/tv_interval"
+        android:text="Interval"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="4dp" />
 </LinearLayout>

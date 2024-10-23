@@ -100,37 +100,68 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
         return due;
     }
 
+    // Updated the review algorithm to use faster intervals with seconds-based increments.
     private void updateFlashcardAfterReview(Flashcard flashcard, int quality) {
-        double ef = flashcard.getEasinessFactor();
-        int repetition = flashcard.getRepetition();
-        int interval = flashcard.getInterval();
+        double ef = flashcard.getEasinessFactor();  // Easiness factor
+        int repetition = flashcard.getRepetition(); // Number of correct repetitions
+        int interval = flashcard.getInterval();     // Interval in seconds
 
-        ef = ef + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-        if (ef < 1.3) {
-            ef = 1.3;
-        }
+        // Parameters
+        int minInterval = 5;   // Minimum interval in seconds
+        int maxInterval = 86400 * 30; // Maximum interval (30 days in seconds)
+        double minEf = 1.3;     // Minimum easiness factor
+        double maxEf = 2.5;     // Maximum easiness factor
 
-        if (quality < 3) {
-            repetition = 0;
-            interval = 1;
+        // Adjust ef based on quality
+        if (quality >= 3) {
+            // Correct answer, increase ef slightly
+            ef += 0.1 * (quality - 3);
+            if (ef > maxEf) {
+                ef = maxEf;
+            }
         } else {
-            repetition += 1;
-            if (repetition == 1) {
-                interval = 1;
-            } else if (repetition == 2) {
-                interval = 6;
-            } else {
-                interval = (int) Math.round(interval * ef);
+            // Incorrect answer, decrease ef
+            ef -= 0.2 * (3 - quality);
+            if (ef < minEf) {
+                ef = minEf;
             }
         }
 
-        long nextReview = System.currentTimeMillis() + interval * 24 * 60 * 60 * 1000L; // Interval in days
+        // Update repetition and interval
+        if (quality >= 3) {
+            // Correct answer
+            repetition += 1;
 
+            // Calculate new interval
+            if (repetition == 1) {
+                interval = minInterval;
+            } else {
+                // Interval increases exponentially with ef and repetitions
+                interval = (int) (minInterval * Math.pow(ef, repetition - 1));
+
+                // Ensure interval doesn't exceed maximum allowed interval
+                if (interval > maxInterval) {
+                    interval = maxInterval;
+                }
+            }
+        } else {
+            // Incorrect answer
+            repetition = 0;
+
+            // Set interval based on quality (lower quality => shorter interval)
+            interval = (int) (minInterval / (quality + 1));
+        }
+
+        // Calculate next review time in seconds
+        long nextReview = System.currentTimeMillis() + interval * 1000L;
+
+        // Update flashcard with the new values
         flashcard.setEasinessFactor(ef);
         flashcard.setRepetition(repetition);
         flashcard.setInterval(interval);
         flashcard.setNextReview(nextReview);
 
+        // Save flashcard to database
         flashcardDAO.updateFlashcard(flashcard);
     }
 

@@ -28,7 +28,7 @@
         <activity android:name=".ListFlashcardsActivity" />
         <activity android:name=".ReviewFlashcardsActivity" />
         <activity android:name=".EditFlashcardActivity" />
-        <activity android:name=".ImportExportActivity" />
+        <activity android:name=".ImportFlashcardsActivity" />
 
     </application>
 </manifest>

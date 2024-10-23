@@ -1,0 +1,28 @@
+<!-- File: activity_import_flashcards.xml -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- EditText for XML input -->
+    <EditText
+        android:id="@+id/et_xml_input"
+        android:hint="Paste XML formatted Questions"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="top"
+        android:inputType="textMultiLine"
+        android:minHeight="200dp"
+        android:maxLines="20" />
+
+    <!-- Button for Import -->
+    <Button
+        android:id="@+id/btn_import"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Import" />
+
+</LinearLayout>

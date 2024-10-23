@@ -6,6 +6,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -126,4 +128,28 @@ public class FlashcardDAO {
         flashcard.setNextReview(cursor.getLong(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW)));
         return flashcard;
     }
+
+    public long insertFlashcardWithResult(Flashcard flashcard) {
+        ContentValues values = new ContentValues();
+        values.put(FlashcardDatabaseHelper.COLUMN_QUESTION, flashcard.getQuestion());
+        values.put(FlashcardDatabaseHelper.COLUMN_ANSWER, flashcard.getAnswer());
+        values.put(FlashcardDatabaseHelper.COLUMN_E_FACTOR, flashcard.getEasinessFactor());
+        values.put(FlashcardDatabaseHelper.COLUMN_REPETITION, flashcard.getRepetition());
+        values.put(FlashcardDatabaseHelper.COLUMN_INTERVAL, flashcard.getInterval());
+        values.put(FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW, flashcard.getNextReview());
+
+        // Insert the flashcard into the flashcards table
+        long result = database.insert(FlashcardDatabaseHelper.TABLE_FLASHCARDS, null, values);
+
+        if (result == -1) {
+            Log.e("DB_ERROR", "Failed to insert flashcard: " + flashcard.getQuestion());
+        } else {
+            Log.d("DB_SUCCESS", "Flashcard inserted successfully: " + flashcard.getQuestion());
+        }
+
+        return result;
+    }
+
+
+
 }
