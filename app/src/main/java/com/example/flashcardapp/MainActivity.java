@@ -21,9 +21,16 @@ public class MainActivity extends AppCompatActivity {
          btnImportExport = findViewById(R.id.btn_import_export);
 
          btnAddFlashcard.setOnClickListener(v -> {
-             Intent intent = new Intent(MainActivity.this, AddFlashcardActivity.class);
-             startActivity(intent);
+             FlashcardDAO flashcardDAO = new FlashcardDAO(this);
+             flashcardDAO.open();
+             flashcardDAO.deleteAllData();
+
+           //  Intent intent = new Intent(MainActivity.this, AddFlashcardActivity.class);
+            // startActivity(intent);
          });
+
+
+
 
          btnReviewFlashcards.setOnClickListener(v -> {
              Intent intent = new Intent(MainActivity.this, ReviewFlashcardsActivity.class);

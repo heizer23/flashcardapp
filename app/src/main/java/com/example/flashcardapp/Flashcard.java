@@ -1,6 +1,8 @@
 // File: Flashcard.java
 package com.example.flashcardapp;
 
+import java.util.List;
+
 public class Flashcard {
     private int id;
     private String question;
@@ -9,6 +11,10 @@ public class Flashcard {
     private int repetition;
     private int interval;
     private long nextReview;
+    private String searchTerm;  // New field for search term
+    private String userNote;    // New field for user note
+
+    private List<Topic> topics;
 
     // Constructors
     public Flashcard() {
@@ -25,9 +31,13 @@ public class Flashcard {
         this.answer = answer;
     }
 
+    public Flashcard(String question, String answer, String searchTerm, String userNote) {
+        this(question, answer);
+        this.searchTerm = searchTerm;
+        this.userNote = userNote;
+    }
+
     // Getters and Setters
-    // ... (Implement getters and setters for all fields)
-    // Example:
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -48,4 +58,13 @@ public class Flashcard {
 
     public long getNextReview() { return nextReview; }
     public void setNextReview(long nextReview) { this.nextReview = nextReview; }
+
+    public String getSearchTerm() { return searchTerm; }
+    public void setSearchTerm(String searchTerm) { this.searchTerm = searchTerm; }
+
+    public String getUserNote() { return userNote; }
+    public void setUserNote(String userNote) { this.userNote = userNote; }
+
+    public List<Topic> getTopics() { return topics; }
+    public void setTopics(List<Topic> topics) { this.topics = topics; }
 }
