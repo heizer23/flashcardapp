@@ -4,6 +4,7 @@
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -29,6 +30,7 @@
         <activity android:name=".ReviewFlashcardsActivity" />
         <activity android:name=".EditFlashcardActivity" />
         <activity android:name=".ImportFlashcardsActivity" />
+        <activity android:name=".ChatGPTActivity" />
 
     </application>
 </manifest>

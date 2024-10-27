@@ -1,6 +1,9 @@
 // File: ImportFlashcardsActivity.java
 package com.example.flashcardapp;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -18,9 +21,8 @@ import java.util.Map;
 public class ImportFlashcardsActivity extends AppCompatActivity {
 
     private EditText etXmlInput;
-    private Button btnImport;
+    private Button btnImport, btnCopyText, btnClearText;
     private FlashcardDAO flashcardDAO;
-
     private Map<String, Topic> topicCache = new HashMap<>();
 
     @Override
@@ -31,6 +33,8 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
         // Initialize views
         etXmlInput = findViewById(R.id.et_xml_input);
         btnImport = findViewById(R.id.btn_import);
+        btnCopyText = findViewById(R.id.btn_copy_text);
+        btnClearText = findViewById(R.id.btn_clear_text);
 
         // Initialize DAO
         flashcardDAO = new FlashcardDAO(this);
@@ -56,7 +60,7 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
                         "</flashcard>"
         );
 
-        // Button click listener
+        // Button click listener for importing flashcards
         btnImport.setOnClickListener(v -> {
             String xmlInput = etXmlInput.getText().toString().trim();
             if (!xmlInput.isEmpty()) {
@@ -84,6 +88,22 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
                 Toast.makeText(this, "Please enter XML input.", Toast.LENGTH_SHORT).show();
             }
         });
+
+        // Button click listener for copying the text from EditText
+        btnCopyText.setOnClickListener(v -> {
+            String textToCopy = etXmlInput.getText().toString().trim();
+            if (!textToCopy.isEmpty()) {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("Flashcard XML", textToCopy);
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(this, "Text copied to clipboard!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Nothing to copy!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Button click listener for clearing the EditText
+        btnClearText.setOnClickListener(v -> etXmlInput.setText(""));
     }
 
     private void preloadTopicCache() {
@@ -101,7 +121,6 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
 
         // Preload the topic cache from the database
         preloadTopicCache();
-
 
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
@@ -170,7 +189,7 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
         }
 
         // If not in cache, check the database
-        Topic topic = flashcardDAO.getTopicByName(topicName); // You need to have this method in your DAO
+        Topic topic = flashcardDAO.getTopicByName(topicName);
         if (topic == null) {
             // If not in database, insert it
             topic = flashcardDAO.insertTopic(topicName);

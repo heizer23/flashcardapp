@@ -1,16 +1,28 @@
-<!-- File: activity_list_flashcards.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="8dp">
+
+    <!-- Toggle button to switch between past/future flashcards -->
+    <ToggleButton
+        android:id="@+id/toggle_review_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textOff="Show Future"
+        android:textOn="Show Past"
+        android:layout_gravity="center_horizontal"
+        android:padding="8dp" />
 
     <!-- Headers for the columns -->
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:background="?android:attr/windowBackground">
 
         <TextView
             android:text="Question"
@@ -43,7 +55,10 @@
 
     <!-- RecyclerView for displaying flashcards -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_flashcards"
+        android:id="@+id/recycler_view_flashcards"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:padding="8dp"
+        android:clipToPadding="false" />
+
 </LinearLayout>

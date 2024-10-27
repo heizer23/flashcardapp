@@ -7,8 +7,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ReviewFlashcardsActivity extends AppCompatActivity {
 
@@ -16,8 +14,6 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
     private Button btnShowAnswer;
     private Button btnForgot, btnStruggling, btnUnsure, btnOkay, btnGood, btnPerfect;
     private FlashcardDAO flashcardDAO;
-    private List<Flashcard> dueFlashcards;
-    private int currentIndex = 0;
     private Flashcard currentFlashcard;
 
     @Override
@@ -43,21 +39,18 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
         flashcardDAO = new FlashcardDAO(this);
         flashcardDAO.open();
 
-        dueFlashcards = getDueFlashcards();
-        if (dueFlashcards.isEmpty()) {
-            Toast.makeText(this, "No flashcards due for review.", Toast.LENGTH_LONG).show();
-            finish();
-        } else {
-            showNextFlashcard();
-        }
+        // Start the review process
+        showNextFlashcard();
 
         btnShowAnswer.setOnClickListener(v -> {
-            tvAnswer.setText(currentFlashcard.getAnswer());
-            tvAnswer.setVisibility(View.VISIBLE);
+            if (currentFlashcard != null) {
+                tvAnswer.setText(currentFlashcard.getAnswer());
+                tvAnswer.setVisibility(View.VISIBLE);
 
-            // Show confidence buttons
-            findViewById(R.id.low_confidence_buttons).setVisibility(View.VISIBLE);
-            findViewById(R.id.high_confidence_buttons).setVisibility(View.VISIBLE);
+                // Show confidence buttons
+                findViewById(R.id.low_confidence_buttons).setVisibility(View.VISIBLE);
+                findViewById(R.id.high_confidence_buttons).setVisibility(View.VISIBLE);
+            }
         });
 
         // Confidence button listeners
@@ -70,100 +63,94 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
     }
 
     private void showNextFlashcard() {
-        currentFlashcard = dueFlashcards.get(currentIndex);
-        tvQuestion.setText(currentFlashcard.getQuestion());
-        tvAnswer.setVisibility(View.GONE);
-        findViewById(R.id.low_confidence_buttons).setVisibility(View.GONE);
-        findViewById(R.id.high_confidence_buttons).setVisibility(View.GONE);
+        // Fetch the next due flashcard from the database
+        currentFlashcard = flashcardDAO.getNextDueFlashcard(System.currentTimeMillis());
+
+        if (currentFlashcard != null) {
+            // Display the flashcard
+            tvQuestion.setText(currentFlashcard.getQuestion());
+            tvAnswer.setVisibility(View.GONE);
+            findViewById(R.id.low_confidence_buttons).setVisibility(View.GONE);
+            findViewById(R.id.high_confidence_buttons).setVisibility(View.GONE);
+        } else {
+            // Show a Toast message if no flashcards are due
+            Toast.makeText(this, "No flashcards due for review!", Toast.LENGTH_SHORT).show();
+            finish(); // End the activity if there are no flashcards left
+        }
     }
 
     private void handleConfidence(int quality) {
+        long previousReviewTime = currentFlashcard.getNextReview(); // Store the previous next_review time
+
+        // Update the flashcard after review (this will modify nextReview time)
         updateFlashcardAfterReview(currentFlashcard, quality);
-        currentIndex++;
-        if (currentIndex < dueFlashcards.size()) {
-            showNextFlashcard();
-        } else {
-            Toast.makeText(this, "Review session completed!", Toast.LENGTH_LONG).show();
-            finish();
-        }
+
+        // Calculate the time difference between the new and old next_review times
+        long timePushed = currentFlashcard.getNextReview()  - System.currentTimeMillis();
+
+        // Use the utility method to format the time difference and show a Toast
+        String timeDifference = TimeUtils.formatTimeDifference(timePushed);
+        Toast.makeText(this, "Next review in: " + timeDifference, Toast.LENGTH_LONG).show();
+
+        // Continue to the next flashcard or finish the session
+        showNextFlashcard();
     }
 
-    private List<Flashcard> getDueFlashcards() {
-        List<Flashcard> allFlashcards = flashcardDAO.getAllFlashcards();
-        List<Flashcard> due = new ArrayList<>();
-        long currentTime = System.currentTimeMillis();
-        for (Flashcard flashcard : allFlashcards) {
-            if (flashcard.getNextReview() <= currentTime) {
-                due.add(flashcard);
-            }
-        }
-        return due;
-    }
 
     // Updated the review algorithm to use faster intervals with seconds-based increments.
     private void updateFlashcardAfterReview(Flashcard flashcard, int quality) {
-        double ef = flashcard.getEasinessFactor();  // Easiness factor
-        int repetition = flashcard.getRepetition(); // Number of correct repetitions
-        int interval = flashcard.getInterval();     // Interval in seconds
+        int interval = flashcard.getInterval(); // Current interval in seconds
+        int repetition = flashcard.getRepetition(); // Current repetition count
+        long currentTime = System.currentTimeMillis();
+        long lastReviewTime = flashcard.getNextReview() - interval * 1000L; // Calculate when the last review was
 
-        // Parameters
-        int minInterval = 5;   // Minimum interval in seconds
-        int maxInterval = 86400 * 30; // Maximum interval (30 days in seconds)
-        double minEf = 1.3;     // Minimum easiness factor
-        double maxEf = 2.5;     // Maximum easiness factor
-
-        // Adjust ef based on quality
-        if (quality >= 3) {
-            // Correct answer, increase ef slightly
-            ef += 0.1 * (quality - 3);
-            if (ef > maxEf) {
-                ef = maxEf;
-            }
-        } else {
-            // Incorrect answer, decrease ef
-            ef -= 0.2 * (3 - quality);
-            if (ef < minEf) {
-                ef = minEf;
-            }
+        // Handle different quality values and set new interval
+        switch (quality) {
+            case 0:
+                interval = 1; // 0 = 1s
+                repetition = 0; // Reset repetition if wrong
+                break;
+            case 1:
+                interval = 10; // 1 = 10s
+                repetition = 0; // Reset repetition if wrong
+                break;
+            case 2:
+                interval = 20; // 2 = 20s
+                repetition = 0; // Reset repetition if wrong
+                break;
+            case 3:
+                interval = 30; // 3 = 30s
+                repetition += 1; // Increment repetition if right
+                break;
+            case 4:
+                interval = 1600; // 4 = last interval * 2
+                repetition += 1; // Increment repetition if right
+                break;
+            case 5:
+                // 5 = time lapsed since the last time I saw the question * 2
+                long timeLapsed = (currentTime - lastReviewTime) / 1000; // Convert time lapsed to seconds
+                interval = (int) (timeLapsed * 2)+3600;
+                repetition += 1; // Increment repetition if right
+                break;
+            default:
+                // Fallback for unexpected values (just in case)
+                interval = 30;
+                repetition = 0; // Reset repetition just in case
+                break;
         }
 
-        // Update repetition and interval
-        if (quality >= 3) {
-            // Correct answer
-            repetition += 1;
+        // Calculate the next review time
+        long nextReview = currentTime + interval * 1000L;
 
-            // Calculate new interval
-            if (repetition == 1) {
-                interval = minInterval;
-            } else {
-                // Interval increases exponentially with ef and repetitions
-                interval = (int) (minInterval * Math.pow(ef, repetition - 1));
-
-                // Ensure interval doesn't exceed maximum allowed interval
-                if (interval > maxInterval) {
-                    interval = maxInterval;
-                }
-            }
-        } else {
-            // Incorrect answer
-            repetition = 0;
-
-            // Set interval based on quality (lower quality => shorter interval)
-            interval = (int) (minInterval / (quality + 1));
-        }
-
-        // Calculate next review time in seconds
-        long nextReview = System.currentTimeMillis() + interval * 1000L;
-
-        // Update flashcard with the new values
-        flashcard.setEasinessFactor(ef);
-        flashcard.setRepetition(repetition);
+        // Update flashcard with the new interval, next review time, and repetition count
         flashcard.setInterval(interval);
         flashcard.setNextReview(nextReview);
+        flashcard.setRepetition(repetition); // Save repetition count
 
-        // Save flashcard to database
+        // Save flashcard to the database
         flashcardDAO.updateFlashcard(flashcard);
     }
+
 
     @Override
     protected void onDestroy() {

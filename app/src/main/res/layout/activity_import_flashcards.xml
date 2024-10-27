@@ -1,4 +1,4 @@
-<!-- File: activity_import_flashcards.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
@@ -18,11 +18,37 @@
         android:minHeight="200dp"
         android:maxLines="20" />
 
-    <!-- Button for Import -->
-    <Button
-        android:id="@+id/btn_import"
+    <!-- LinearLayout for the buttons, with horizontal orientation -->
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Import" />
+        android:layout_marginTop="16dp">
+
+        <!-- Button to copy the content of EditText -->
+        <Button
+            android:id="@+id/btn_copy_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Copy" />
+
+        <!-- Button to clear the content of EditText -->
+        <Button
+            android:id="@+id/btn_clear_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Clear" />
+
+        <!-- Button to import flashcards -->
+        <Button
+            android:id="@+id/btn_import"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Import" />
+
+    </LinearLayout>
 
 </LinearLayout>

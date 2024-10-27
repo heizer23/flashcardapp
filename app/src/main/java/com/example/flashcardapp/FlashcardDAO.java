@@ -137,7 +137,7 @@ public class FlashcardDAO {
         List<Flashcard> flashcards = new ArrayList<>();
         Cursor cursor = database.query(
                 FlashcardDatabaseHelper.TABLE_FLASHCARDS, flashcardColumns,
-                null, null, null, null, FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " ASC"
+                null, null, null, null, FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " asc "
         );
 
         cursor.moveToFirst();
@@ -149,6 +149,26 @@ public class FlashcardDAO {
         cursor.close();
         return flashcards;
     }
+
+    public Flashcard getNextDueFlashcard(long currentTime) {
+        Flashcard flashcard = null;
+
+        // Query to get the flashcard with the closest next_review time that is due
+        String query = "SELECT * FROM " + FlashcardDatabaseHelper.TABLE_FLASHCARDS +
+                " WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " <= ?" +
+                " ORDER BY " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " DESC " +
+                " LIMIT 1"; // Limit to the first result
+
+        Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(currentTime)});
+
+        if (cursor.moveToFirst()) {
+            flashcard = cursorToFlashcard(cursor); // Convert the cursor to a flashcard object
+        }
+        cursor.close();
+
+        return flashcard;
+    }
+
 
     // Method to update an existing flashcard
     public void updateFlashcard(Flashcard flashcard) {
@@ -264,4 +284,45 @@ public class FlashcardDAO {
 
         Log.d("Database", "All data deleted from flashcards, topics, and cross-reference tables.");
     }
+
+    // Get flashcards with next_review in the future (ascending)
+    public List<Flashcard> getFutureFlashcards() {
+        List<Flashcard> flashcards = new ArrayList<>();
+
+        String query = "SELECT * FROM " + FlashcardDatabaseHelper.TABLE_FLASHCARDS +
+                " WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " > ?" +
+                " ORDER BY " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " ASC";
+
+        Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(System.currentTimeMillis())});
+
+        if (cursor.moveToFirst()) {
+            do {
+                flashcards.add(cursorToFlashcard(cursor));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+
+        return flashcards;
+    }
+
+    // Get flashcards with next_review in the past (descending)
+    public List<Flashcard> getPastFlashcards() {
+        List<Flashcard> flashcards = new ArrayList<>();
+
+        String query = "SELECT * FROM " + FlashcardDatabaseHelper.TABLE_FLASHCARDS +
+                " WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " <= ?" +
+                " ORDER BY " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " DESC";
+
+        Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(System.currentTimeMillis())});
+
+        if (cursor.moveToFirst()) {
+            do {
+                flashcards.add(cursorToFlashcard(cursor));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+
+        return flashcards;
+    }
+
 }

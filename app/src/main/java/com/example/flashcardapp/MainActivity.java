@@ -15,18 +15,19 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-         btnAddFlashcard = findViewById(R.id.btn_add_flashcard);
+         btnAddFlashcard = findViewById(R.id.btn_action);
          btnReviewFlashcards = findViewById(R.id.btn_review_flashcards);
          btnListFlashcards = findViewById(R.id.btn_list_flashcards);
          btnImportExport = findViewById(R.id.btn_import_export);
 
          btnAddFlashcard.setOnClickListener(v -> {
-             FlashcardDAO flashcardDAO = new FlashcardDAO(this);
-             flashcardDAO.open();
-             flashcardDAO.deleteAllData();
+            // FlashcardDAO flashcardDAO = new FlashcardDAO(this);
+            // flashcardDAO.open();
+            // flashcardDAO.deleteAllData();
 
            //  Intent intent = new Intent(MainActivity.this, AddFlashcardActivity.class);
-            // startActivity(intent);
+             Intent intent = new Intent(MainActivity.this, ChatGPTActivity.class);
+              startActivity(intent);
          });
 
 
