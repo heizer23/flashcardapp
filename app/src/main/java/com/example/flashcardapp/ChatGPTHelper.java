@@ -10,6 +10,8 @@ import java.io.IOException;
 
 public class ChatGPTHelper {
 
+    private static final String API_URL = "https://api.openai.com/v1/chat/completions";
+    private static final String API_KEY = "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"; // Replace with your actual API key
 
     private static final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
