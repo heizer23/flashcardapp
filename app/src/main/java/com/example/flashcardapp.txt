@@ -1,0 +1,1487 @@
+// File: AddFlashcardActivity.java
+package com.example.flashcardapp;
+
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class AddFlashcardActivity extends AppCompatActivity {
+
+    private EditText etQuestion, etAnswer;
+    private Button btnSave;
+    private FlashcardDAO flashcardDAO;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_add_flashcard);
+
+        etQuestion = findViewById(R.id.et_question);
+        etAnswer = findViewById(R.id.et_answer);
+        btnSave = findViewById(R.id.btn_save);
+
+        flashcardDAO = new FlashcardDAO(this);
+        flashcardDAO.open();
+
+        btnSave.setOnClickListener(v -> {
+            String question = etQuestion.getText().toString().trim();
+            String answer = etAnswer.getText().toString().trim();
+
+            if (!question.isEmpty() && !answer.isEmpty()) {
+                Flashcard flashcard = new Flashcard(question, answer);
+                flashcardDAO.createFlashcard(flashcard);
+                Toast.makeText(this, "Flashcard saved!", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(this, "Please enter both question and answer.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        flashcardDAO.close();
+        super.onDestroy();
+    }
+}
+ 
+package com.example.flashcardapp;
+
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import okhttp3.*;
+import org.json.JSONObject;
+import java.io.IOException;
+
+public class ChatGPTActivity extends AppCompatActivity {
+
+    private static final String API_URL = "https://api.openai.com/v1/chat/completions";
+    private static final String API_KEY = "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"; // Replace with your actual API key
+
+    private EditText etQuery;
+    private TextView tvResponse;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_chat_gpt);
+
+        etQuery = findViewById(R.id.et_query);
+        Button btnSendQuery = findViewById(R.id.btn_send_query);
+        tvResponse = findViewById(R.id.tv_response);
+
+        btnSendQuery.setOnClickListener(v -> {
+            String userInput = etQuery.getText().toString().trim();
+            if (!userInput.isEmpty()) {
+                callChatGPT(userInput);
+            } else {
+                Toast.makeText(this, "Please enter a query", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void callChatGPT(String userInput) {
+        OkHttpClient client = new OkHttpClient();
+
+        // Construct the JSON payload for the API request
+        String json = "{"
+                + "\"model\": \"gpt-3.5-turbo\","
+                + "\"messages\": [{\"role\": \"user\", \"content\": \"" + userInput + "\"}]"
+                + "}";
+
+        RequestBody body = RequestBody.create(
+                json, MediaType.get("application/json; charset=utf-8"));
+
+        Request request = new Request.Builder()
+                .url(API_URL)
+                .header("Authorization", "Bearer " + API_KEY)
+                .post(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                runOnUiThread(() -> Toast.makeText(ChatGPTActivity.this, "Failed to connect", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    try {
+                        JSONObject jsonResponse = new JSONObject(responseBody);
+                        String reply = jsonResponse
+                                .getJSONArray("choices")
+                                .getJSONObject(0)
+                                .getJSONObject("message")
+                                .getString("content");
+
+                        runOnUiThread(() -> tvResponse.setText(reply));
+                    } catch (Exception e) {
+                        runOnUiThread(() -> tvResponse.setText("Error parsing response"));
+                    }
+                } else {
+                    runOnUiThread(() -> tvResponse.setText("Error: " + response.code()));
+                }
+            }
+        });
+    }
+}
+ 
+package com.example.flashcardapp;
+
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class EditFlashcardActivity extends AppCompatActivity {
+
+    private EditText etQuestion, etAnswer, etSearchTerm, etUserNote, etTopics;
+    private Button btnUpdate;
+    private FlashcardDAO flashcardDAO;
+    private Flashcard flashcard;
+    private List<Topic> associatedTopics;
+
+    // Cache for topics
+    private Map<String, Topic> topicCache = new HashMap<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_edit_flashcard);
+
+        // Initialize views
+        etQuestion = findViewById(R.id.et_question);
+        etAnswer = findViewById(R.id.et_answer);
+        etSearchTerm = findViewById(R.id.et_search_term);
+        etUserNote = findViewById(R.id.et_user_note);
+        etTopics = findViewById(R.id.et_topics);
+        btnUpdate = findViewById(R.id.btn_update);
+
+        // Initialize DAO
+        flashcardDAO = new FlashcardDAO(this);
+        flashcardDAO.open();
+
+
+
+        // Preload the topic cache with all existing topics from the database
+        preloadTopicCache();
+
+        // Retrieve flashcard ID from Intent
+        int flashcardId = getIntent().getIntExtra("FLASHCARD_ID", -1);
+        if (flashcardId != -1) {
+            flashcard = flashcardDAO.getFlashcard(flashcardId);
+            if (flashcard != null) {
+                // Pre-fill fields with flashcard data
+                etQuestion.setText(flashcard.getQuestion());
+                etAnswer.setText(flashcard.getAnswer());
+                etSearchTerm.setText(flashcard.getSearchTerm());
+                etUserNote.setText(flashcard.getUserNote());
+
+                // Get topics associated with the flashcard and display them as comma-separated values
+                associatedTopics = flashcardDAO.getTopicsForFlashcard(flashcard.getId());
+                StringBuilder topicList = new StringBuilder();
+                for (Topic topic : associatedTopics) {
+                    topicList.append(topic.getName()).append(", ");
+                }
+
+                // Remove last comma and space if topics exist
+                if (topicList.length() > 0) {
+                    topicList.setLength(topicList.length() - 2);
+                }
+                etTopics.setText(topicList.toString());
+            }
+        }
+
+        // Set up update button
+        btnUpdate.setOnClickListener(v -> {
+            String question = etQuestion.getText().toString().trim();
+            String answer = etAnswer.getText().toString().trim();
+            String searchTerm = etSearchTerm.getText().toString().trim();
+            String userNote = etUserNote.getText().toString().trim();
+            String topics = etTopics.getText().toString().trim();  // Comma-separated topics
+
+            if (!question.isEmpty() && !answer.isEmpty()) {
+                // Update flashcard fields
+                flashcard.setQuestion(question);
+                flashcard.setAnswer(answer);
+                flashcard.setSearchTerm(searchTerm);
+                flashcard.setUserNote(userNote);
+                flashcardDAO.updateFlashcard(flashcard);
+
+                // Clear existing topic associations for the flashcard
+                flashcardDAO.clearTopicsForFlashcard(flashcard.getId());
+
+                // Handle topics using cache (convert comma-separated list into individual topics)
+                String[] topicArray = topics.split(",");
+                for (String topicName : topicArray) {
+                    topicName = topicName.trim();
+                    if (!topicName.isEmpty()) {
+                        Topic topic = getOrInsertTopicFromCache(topicName);
+                        flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId());
+                    }
+                }
+
+                Toast.makeText(this, "Flashcard updated!", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(this, "Please enter both question and answer.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Preload existing topics into the cache
+    private void preloadTopicCache() {
+        List<Topic> existingTopics = flashcardDAO.getAllTopics();
+        for (Topic topic : existingTopics) {
+            topicCache.put(topic.getName(), topic);
+        }
+    }
+
+    // Get or insert topic from cache
+    private Topic getOrInsertTopicFromCache(String topicName) {
+        // First check in the cache
+        if (topicCache.containsKey(topicName)) {
+            return topicCache.get(topicName);
+        }
+
+        // If not found in cache, check the database
+        Topic topic = flashcardDAO.getTopicByName(topicName);
+        if (topic == null) {
+            // If not found in the database, insert the new topic
+            topic = flashcardDAO.insertTopic(topicName);
+        }
+
+        // Add the topic to the cache
+        topicCache.put(topicName, topic);
+
+        return topic;
+    }
+
+    @Override
+    protected void onDestroy() {
+        flashcardDAO.close();
+        super.onDestroy();
+    }
+}
+ 
+// File: Flashcard.java
+package com.example.flashcardapp;
+
+import java.util.List;
+
+public class Flashcard {
+    private int id;
+    private String question;
+    private String answer;
+    private double easinessFactor;
+    private int repetition;
+    private int interval;
+    private long nextReview;
+    private String searchTerm;  // New field for search term
+    private String userNote;    // New field for user note
+
+    private List<Topic> topics;
+
+    // Constructors
+    public Flashcard() {
+        // Default values
+        this.easinessFactor = 2.5;
+        this.repetition = 0;
+        this.interval = 1;
+        this.nextReview = System.currentTimeMillis();
+    }
+
+    public Flashcard(String question, String answer) {
+        this();
+        this.question = question;
+        this.answer = answer;
+    }
+
+    public Flashcard(String question, String answer, String searchTerm, String userNote) {
+        this(question, answer);
+        this.searchTerm = searchTerm;
+        this.userNote = userNote;
+    }
+
+    // Getters and Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getQuestion() { return question; }
+    public void setQuestion(String question) { this.question = question; }
+
+    public String getAnswer() { return answer; }
+    public void setAnswer(String answer) { this.answer = answer; }
+
+    public double getEasinessFactor() { return easinessFactor; }
+    public void setEasinessFactor(double easinessFactor) { this.easinessFactor = easinessFactor; }
+
+    public int getRepetition() { return repetition; }
+    public void setRepetition(int repetition) { this.repetition = repetition; }
+
+    public int getInterval() { return interval; }
+    public void setInterval(int interval) { this.interval = interval; }
+
+    public long getNextReview() { return nextReview; }
+    public void setNextReview(long nextReview) { this.nextReview = nextReview; }
+
+    public String getSearchTerm() { return searchTerm; }
+    public void setSearchTerm(String searchTerm) { this.searchTerm = searchTerm; }
+
+    public String getUserNote() { return userNote; }
+    public void setUserNote(String userNote) { this.userNote = userNote; }
+
+    public List<Topic> getTopics() { return topics; }
+    public void setTopics(List<Topic> topics) { this.topics = topics; }
+}
+ 
+// File: FlashcardAdapter.java
+package com.example.flashcardapp;
+
+import android.content.Context;
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+public class FlashcardAdapter extends RecyclerView.Adapter<FlashcardAdapter.ViewHolder> {
+
+    private List<Flashcard> flashcards;
+    private Context context;
+
+    public FlashcardAdapter(Context context, List<Flashcard> flashcards) {
+        this.context = context;
+        // Sort flashcards by nextReview, with overdue ones first
+        Collections.sort(flashcards, new Comparator<Flashcard>() {
+            @Override
+            public int compare(Flashcard f1, Flashcard f2) {
+                return Long.compare(f1.getNextReview(), f2.getNextReview());
+            }
+        });
+        this.flashcards = flashcards;
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        public TextView tvQuestion, tvAnswer, tvTimeDifference, tvInterval;
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+            tvQuestion = itemView.findViewById(R.id.tv_question);
+            tvAnswer = itemView.findViewById(R.id.tv_answer);
+            tvTimeDifference = itemView.findViewById(R.id.tv_time_difference);
+            tvInterval = itemView.findViewById(R.id.tv_interval);
+
+            // Handle row click to open the edit/delete view
+            itemView.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                Flashcard flashcard = flashcards.get(position);
+                Intent intent = new Intent(context, EditFlashcardActivity.class);
+                intent.putExtra("FLASHCARD_ID", flashcard.getId());
+                context.startActivity(intent);
+            });
+        }
+    }
+
+    @Override
+    public FlashcardAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_flashcard, parent, false);
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(FlashcardAdapter.ViewHolder holder, int position) {
+        Flashcard flashcard = flashcards.get(position);
+        holder.tvQuestion.setText(flashcard.getQuestion());
+        holder.tvAnswer.setText(flashcard.getAnswer());
+
+        // Calculate time difference in seconds, minutes, and days
+        long currentTime = System.currentTimeMillis();
+        long nextReviewTime = flashcard.getNextReview();
+        long timeDifferenceMillis = nextReviewTime - currentTime;
+
+        long absTimeDifferenceMillis = Math.abs(timeDifferenceMillis);
+
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(absTimeDifferenceMillis) % 60;
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(absTimeDifferenceMillis) % 60;
+        long days = TimeUnit.MILLISECONDS.toDays(absTimeDifferenceMillis);
+
+        // Format the time difference as -12/03/00
+        String timeDifferenceText = String.format("%02d/%02d/%02d", seconds, minutes, days);
+
+        // Add a negative sign if the review is overdue
+        if (timeDifferenceMillis < 0) {
+            timeDifferenceText = "-" + timeDifferenceText;
+        }
+
+        long intervalValue = Math.abs(flashcard.getInterval()) * 1000L;  // Convert seconds to milliseconds
+
+        seconds = TimeUnit.MILLISECONDS.toSeconds(intervalValue) % 60;
+        minutes = TimeUnit.MILLISECONDS.toMinutes(intervalValue) % 60;
+        days = TimeUnit.MILLISECONDS.toDays(intervalValue);
+
+        String timeIntervalText = String.format("%02d/%02d/%02d", seconds, minutes, days);
+
+        // Set the time difference and interval values
+        holder.tvTimeDifference.setText(timeDifferenceText);
+        holder.tvInterval.setText(timeIntervalText);
+    }
+
+    @Override
+    public int getItemCount() {
+        return flashcards.size();
+    }
+}
+ 
+// File: FlashcardDAO.java
+package com.example.flashcardapp;
+
+import android.annotation.SuppressLint;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class FlashcardDAO {
+    private SQLiteDatabase database;
+    private FlashcardDatabaseHelper dbHelper;
+
+    private String[] flashcardColumns = {
+            FlashcardDatabaseHelper.COLUMN_ID,
+            FlashcardDatabaseHelper.COLUMN_QUESTION,
+            FlashcardDatabaseHelper.COLUMN_ANSWER,
+            FlashcardDatabaseHelper.COLUMN_E_FACTOR,
+            FlashcardDatabaseHelper.COLUMN_REPETITION,
+            FlashcardDatabaseHelper.COLUMN_INTERVAL,
+            FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW,
+            FlashcardDatabaseHelper.COLUMN_SEARCH_TERM,  // Add search term
+            FlashcardDatabaseHelper.COLUMN_USER_NOTE     // Add user note
+    };
+
+    private String[] topicColumns = {
+            FlashcardDatabaseHelper.COLUMN_TOPIC_ID,
+            FlashcardDatabaseHelper.COLUMN_TOPIC_NAME
+    };
+
+    public FlashcardDAO(Context context) {
+        dbHelper = new FlashcardDatabaseHelper(context);
+    }
+
+    public void open() {
+        database = dbHelper.getWritableDatabase();
+    }
+
+    public void close() {
+        dbHelper.close();
+    }
+
+    // Method to create a new flashcard
+    public Flashcard createFlashcard(Flashcard flashcard) {
+        ContentValues values = new ContentValues();
+        values.put(FlashcardDatabaseHelper.COLUMN_QUESTION, flashcard.getQuestion());
+        values.put(FlashcardDatabaseHelper.COLUMN_ANSWER, flashcard.getAnswer());
+        values.put(FlashcardDatabaseHelper.COLUMN_E_FACTOR, flashcard.getEasinessFactor());
+        values.put(FlashcardDatabaseHelper.COLUMN_REPETITION, flashcard.getRepetition());
+        values.put(FlashcardDatabaseHelper.COLUMN_INTERVAL, flashcard.getInterval());
+        values.put(FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW, flashcard.getNextReview());
+        values.put(FlashcardDatabaseHelper.COLUMN_SEARCH_TERM, flashcard.getSearchTerm());
+        values.put(FlashcardDatabaseHelper.COLUMN_USER_NOTE, flashcard.getUserNote());
+
+        long insertId = database.insert(FlashcardDatabaseHelper.TABLE_FLASHCARDS, null, values);
+        flashcard.setId((int) insertId);
+        return flashcard;
+    }
+
+    // Method to retrieve a flashcard by its ID
+    public Flashcard getFlashcard(int id) {
+        Cursor cursor = database.query(
+                FlashcardDatabaseHelper.TABLE_FLASHCARDS,
+                flashcardColumns,
+                FlashcardDatabaseHelper.COLUMN_ID + " = ?",
+                new String[]{String.valueOf(id)},
+                null, null, null
+        );
+
+        Flashcard flashcard = null;
+        if (cursor != null && cursor.moveToFirst()) {
+            flashcard = cursorToFlashcard(cursor);
+            cursor.close();
+        }
+
+        return flashcard;
+    }
+
+    // Method to clear all topic associations for a flashcard
+    public void clearTopicsForFlashcard(int flashcardId) {
+        int rowsDeleted = database.delete(
+                FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF,
+                FlashcardDatabaseHelper.COLUMN_FLASHCARD_ID + " = ?",
+                new String[]{String.valueOf(flashcardId)}
+        );
+        Log.d("Database", "Rows deleted: " + rowsDeleted);
+    }
+
+    // Method to insert a topic
+    public Topic insertTopic(String topicName) {
+        ContentValues values = new ContentValues();
+        values.put(FlashcardDatabaseHelper.COLUMN_TOPIC_NAME, topicName);
+
+        long topicId = database.insertWithOnConflict(
+                FlashcardDatabaseHelper.TABLE_TOPICS, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+
+        Topic topic = new Topic(topicName);
+        topic.setId((int) topicId);
+        return topic;
+    }
+
+    // Method to associate a flashcard with a topic
+    public void associateFlashcardWithTopic(int flashcardId, int topicId) {
+        ContentValues values = new ContentValues();
+        values.put(FlashcardDatabaseHelper.COLUMN_FLASHCARD_ID, flashcardId);
+        values.put(FlashcardDatabaseHelper.COLUMN_TOPIC_ID_REF, topicId);
+
+        database.insert(FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF, null, values);
+    }
+
+    // Get all topics for a flashcard
+    public List<Topic> getTopicsForFlashcard(int flashcardId) {
+        List<Topic> topics = new ArrayList<>();
+        Cursor cursor = database.rawQuery("SELECT * FROM " + FlashcardDatabaseHelper.TABLE_TOPICS + " t" +
+                " INNER JOIN " + FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF + " c" +
+                " ON t." + FlashcardDatabaseHelper.COLUMN_TOPIC_ID + " = c." + FlashcardDatabaseHelper.COLUMN_TOPIC_ID_REF +
+                " WHERE c." + FlashcardDatabaseHelper.COLUMN_FLASHCARD_ID + " = ?", new String[]{String.valueOf(flashcardId)});
+
+        if (cursor.moveToFirst()) {
+            do {
+                Topic topic = new Topic();
+                topic.setId(cursor.getInt(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_TOPIC_ID)));
+                topic.setName(cursor.getString(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_TOPIC_NAME)));
+                topics.add(topic);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return topics;
+    }
+
+    // Method to retrieve all flashcards
+    public List<Flashcard> getAllFlashcards() {
+        List<Flashcard> flashcards = new ArrayList<>();
+        Cursor cursor = database.query(
+                FlashcardDatabaseHelper.TABLE_FLASHCARDS, flashcardColumns,
+                null, null, null, null, FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " asc "
+        );
+
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            Flashcard flashcard = cursorToFlashcard(cursor);
+            flashcards.add(flashcard);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return flashcards;
+    }
+
+    public Flashcard getNextDueFlashcard(long currentTime) {
+        Flashcard flashcard = null;
+
+        // Query to get the flashcard with the closest next_review time that is due
+        String query = "SELECT * FROM " + FlashcardDatabaseHelper.TABLE_FLASHCARDS +
+                " WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " <= ?" +
+                " ORDER BY " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " DESC " +
+                " LIMIT 1"; // Limit to the first result
+
+        Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(currentTime)});
+
+        if (cursor.moveToFirst()) {
+            flashcard = cursorToFlashcard(cursor); // Convert the cursor to a flashcard object
+        }
+        cursor.close();
+
+        return flashcard;
+    }
+
+
+    // Method to update an existing flashcard
+    public void updateFlashcard(Flashcard flashcard) {
+        ContentValues values = new ContentValues();
+        values.put(FlashcardDatabaseHelper.COLUMN_QUESTION, flashcard.getQuestion());
+        values.put(FlashcardDatabaseHelper.COLUMN_ANSWER, flashcard.getAnswer());
+        values.put(FlashcardDatabaseHelper.COLUMN_E_FACTOR, flashcard.getEasinessFactor());
+        values.put(FlashcardDatabaseHelper.COLUMN_REPETITION, flashcard.getRepetition());
+        values.put(FlashcardDatabaseHelper.COLUMN_INTERVAL, flashcard.getInterval());
+        values.put(FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW, flashcard.getNextReview());
+        values.put(FlashcardDatabaseHelper.COLUMN_SEARCH_TERM, flashcard.getSearchTerm());
+        values.put(FlashcardDatabaseHelper.COLUMN_USER_NOTE, flashcard.getUserNote());
+
+        database.update(
+                FlashcardDatabaseHelper.TABLE_FLASHCARDS,
+                values,
+                FlashcardDatabaseHelper.COLUMN_ID + " = ?",
+                new String[]{String.valueOf(flashcard.getId())}
+        );
+    }
+
+    // Method to retrieve all topics
+    public List<Topic> getAllTopics() {
+        List<Topic> topics = new ArrayList<>();
+        Cursor cursor = database.query(
+                FlashcardDatabaseHelper.TABLE_TOPICS,
+                new String[]{FlashcardDatabaseHelper.COLUMN_TOPIC_ID, FlashcardDatabaseHelper.COLUMN_TOPIC_NAME},
+                null, null, null, null, null
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                @SuppressLint("Range") int topicId = cursor.getInt(cursor.getColumnIndex(FlashcardDatabaseHelper.COLUMN_TOPIC_ID));
+                @SuppressLint("Range") String topicName = cursor.getString(cursor.getColumnIndex(FlashcardDatabaseHelper.COLUMN_TOPIC_NAME));
+                topics.add(new Topic(topicId, topicName));
+            } while (cursor.moveToNext());
+
+            cursor.close();
+        }
+
+        return topics;
+    }
+
+    public void testCursorForTopics() {
+        // Use the same query as in your getTopicsForFlashcard method
+        Cursor cursor = database.query(
+                FlashcardDatabaseHelper.TABLE_TOPICS,
+                new String[]{FlashcardDatabaseHelper.COLUMN_TOPIC_ID, FlashcardDatabaseHelper.COLUMN_TOPIC_NAME},
+                null, null, null, null, null
+        );
+        Log.d("Test Cursor Columns", "Soll: " + FlashcardDatabaseHelper.COLUMN_TOPIC_ID +  FlashcardDatabaseHelper.COLUMN_TOPIC_NAME);
+
+        // Log the column names to check if the columns are being retrieved correctly
+        if (cursor != null && cursor.moveToFirst()) {
+            String[] columnNames = cursor.getColumnNames();
+            for (String columnName : columnNames) {
+                Log.d("Test Cursor Columns", "Column: " + columnName);
+            }
+            cursor.close(); // Close cursor after using it
+        } else {
+            Log.d("Test Cursor", "Cursor is empty or null");
+        }
+    }
+
+
+
+    // Method to retrieve a topic by name
+    public Topic getTopicByName(String topicName) {
+        Topic topic = null;
+        Cursor cursor = database.query(
+                FlashcardDatabaseHelper.TABLE_TOPICS,
+                new String[]{FlashcardDatabaseHelper.COLUMN_TOPIC_ID, FlashcardDatabaseHelper.COLUMN_TOPIC_NAME},
+                FlashcardDatabaseHelper.COLUMN_TOPIC_NAME + " = ?",
+                new String[]{topicName},
+                null, null, null
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+            @SuppressLint("Range") int topicId = cursor.getInt(cursor.getColumnIndex(FlashcardDatabaseHelper.COLUMN_TOPIC_ID));
+            @SuppressLint("Range") String retrievedTopicName = cursor.getString(cursor.getColumnIndex(FlashcardDatabaseHelper.COLUMN_TOPIC_NAME));
+            topic = new Topic(topicId, retrievedTopicName);
+            cursor.close();
+        }
+
+        return topic;
+    }
+
+
+    // Helper method to convert a cursor to a Flashcard object
+    private Flashcard cursorToFlashcard(Cursor cursor) {
+        Flashcard flashcard = new Flashcard();
+        flashcard.setId(cursor.getInt(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_ID)));
+        flashcard.setQuestion(cursor.getString(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_QUESTION)));
+        flashcard.setAnswer(cursor.getString(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_ANSWER)));
+        flashcard.setEasinessFactor(cursor.getDouble(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_E_FACTOR)));
+        flashcard.setRepetition(cursor.getInt(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_REPETITION)));
+        flashcard.setInterval(cursor.getInt(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_INTERVAL)));
+        flashcard.setNextReview(cursor.getLong(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW)));
+        flashcard.setSearchTerm(cursor.getString(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_SEARCH_TERM)));  // Get search term
+        flashcard.setUserNote(cursor.getString(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_USER_NOTE)));      // Get user note
+
+        List<Topic> topics = getTopicsForFlashcard(flashcard.getId());
+        flashcard.setTopics(topics);
+
+        return flashcard;
+    }
+
+    public void deleteAllData() {
+        // Deleting all entries from each table
+        database.delete(FlashcardDatabaseHelper.TABLE_FLASHCARDS, null, null);
+        database.delete(FlashcardDatabaseHelper.TABLE_TOPICS, null, null);
+        database.delete(FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF, null, null);
+
+        Log.d("Database", "All data deleted from flashcards, topics, and cross-reference tables.");
+    }
+
+    // Get flashcards with next_review in the future (ascending)
+    public List<Flashcard> getFutureFlashcards() {
+        List<Flashcard> flashcards = new ArrayList<>();
+
+        String query = "SELECT * FROM " + FlashcardDatabaseHelper.TABLE_FLASHCARDS +
+                " WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " > ?" +
+                " ORDER BY " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " ASC";
+
+        Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(System.currentTimeMillis())});
+
+        if (cursor.moveToFirst()) {
+            do {
+                flashcards.add(cursorToFlashcard(cursor));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+
+        return flashcards;
+    }
+
+    // Get flashcards with next_review in the past (descending)
+    public List<Flashcard> getPastFlashcards() {
+        List<Flashcard> flashcards = new ArrayList<>();
+
+        String query = "SELECT * FROM " + FlashcardDatabaseHelper.TABLE_FLASHCARDS +
+                " WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " <= ?" +
+                " ORDER BY " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " DESC";
+
+        Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(System.currentTimeMillis())});
+
+        if (cursor.moveToFirst()) {
+            do {
+                flashcards.add(cursorToFlashcard(cursor));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+
+        return flashcards;
+    }
+
+}
+ 
+// File: FlashcardDatabaseHelper.java
+package com.example.flashcardapp;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+public class FlashcardDatabaseHelper extends SQLiteOpenHelper {
+    private static final String DATABASE_NAME = "flashcards.db";
+    private static final int DATABASE_VERSION = 2;  // Incremented for new tables
+
+    // Table and column names
+    public static final String TABLE_FLASHCARDS = "flashcards";
+    public static final String TABLE_TOPICS = "topics";
+    public static final String TABLE_FLASHCARD_TOPIC_CROSS_REF = "flashcard_topic_cross_ref";
+
+    // Flashcard columns
+    public static final String COLUMN_ID = "id";
+    public static final String COLUMN_QUESTION = "question";
+    public static final String COLUMN_ANSWER = "answer";
+    public static final String COLUMN_E_FACTOR = "easinessFactor";
+    public static final String COLUMN_REPETITION = "repetition";
+    public static final String COLUMN_INTERVAL = "interval";
+    public static final String COLUMN_NEXT_REVIEW = "nextReview";
+    public static final String COLUMN_SEARCH_TERM = "searchTerm";
+    public static final String COLUMN_USER_NOTE = "userNote";
+
+    // Topic columns
+    public static final String COLUMN_TOPIC_ID = "id";
+    public static final String COLUMN_TOPIC_NAME = "name";
+
+    // CrossRef columns
+    public static final String COLUMN_FLASHCARD_ID = "flashcard_id";
+    public static final String COLUMN_TOPIC_ID_REF = "topic_id";
+
+    // SQL statement to create the flashcards table
+    private static final String TABLE_CREATE_FLASHCARDS =
+            "CREATE TABLE " + TABLE_FLASHCARDS + " (" +
+                    COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    COLUMN_QUESTION + " TEXT, " +
+                    COLUMN_ANSWER + " TEXT, " +
+                    COLUMN_E_FACTOR + " REAL, " +
+                    COLUMN_REPETITION + " INTEGER, " +
+                    COLUMN_INTERVAL + " INTEGER, " +
+                    COLUMN_NEXT_REVIEW + " INTEGER, " +
+                    COLUMN_SEARCH_TERM + " TEXT, " +    // Add searchTerm column
+                    COLUMN_USER_NOTE + " TEXT" +        // Add userNote column
+                    ");";
+
+    // SQL statement to create the topics table
+    private static final String TABLE_CREATE_TOPICS =
+            "CREATE TABLE " + TABLE_TOPICS + " (" +
+                    COLUMN_TOPIC_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    COLUMN_TOPIC_NAME + " TEXT" +
+                    ");";
+
+    // SQL statement to create the flashcard_topic_cross_ref table
+    private static final String TABLE_CREATE_FLASHCARD_TOPIC_CROSS_REF =
+            "CREATE TABLE " + TABLE_FLASHCARD_TOPIC_CROSS_REF + " (" +
+                    COLUMN_FLASHCARD_ID + " INTEGER, " +
+                    COLUMN_TOPIC_ID_REF + " INTEGER, " +
+                    "PRIMARY KEY(" + COLUMN_FLASHCARD_ID + ", " + COLUMN_TOPIC_ID_REF + "), " +
+                    "FOREIGN KEY(" + COLUMN_FLASHCARD_ID + ") REFERENCES " + TABLE_FLASHCARDS + "(" + COLUMN_ID + "), " +
+                    "FOREIGN KEY(" + COLUMN_TOPIC_ID_REF + ") REFERENCES " + TABLE_TOPICS + "(" + COLUMN_TOPIC_ID + ")" +
+                    ");";
+
+    public FlashcardDatabaseHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(TABLE_CREATE_FLASHCARDS);
+        db.execSQL(TABLE_CREATE_TOPICS);
+        db.execSQL(TABLE_CREATE_FLASHCARD_TOPIC_CROSS_REF);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Handle database upgrade
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE " + TABLE_FLASHCARDS + " ADD COLUMN " + COLUMN_SEARCH_TERM + " TEXT;");
+            db.execSQL("ALTER TABLE " + TABLE_FLASHCARDS + " ADD COLUMN " + COLUMN_USER_NOTE + " TEXT;");
+            db.execSQL(TABLE_CREATE_TOPICS);
+            db.execSQL(TABLE_CREATE_FLASHCARD_TOPIC_CROSS_REF);
+        }
+    }
+}
+ 
+// File: FlashcardTopicCrossRef.java
+package com.example.flashcardapp;
+
+public class FlashcardTopicCrossRef {
+    private int flashcardId;
+    private int topicId;
+
+    // Constructors
+    public FlashcardTopicCrossRef() {}
+
+    public FlashcardTopicCrossRef(int flashcardId, int topicId) {
+        this.flashcardId = flashcardId;
+        this.topicId = topicId;
+    }
+
+    // Getters and Setters
+    public int getFlashcardId() { return flashcardId; }
+    public void setFlashcardId(int flashcardId) { this.flashcardId = flashcardId; }
+
+    public int getTopicId() { return topicId; }
+    public void setTopicId(int topicId) { this.topicId = topicId; }
+}
+ 
+// File: ImportFlashcardsActivity.java
+package com.example.flashcardapp;
+
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.os.Bundle;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ImportFlashcardsActivity extends AppCompatActivity {
+
+    private EditText etXmlInput;
+    private Button btnImport, btnCopyText, btnClearText;
+    private FlashcardDAO flashcardDAO;
+    private Map<String, Topic> topicCache = new HashMap<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_import_flashcards);
+
+        // Initialize views
+        etXmlInput = findViewById(R.id.et_xml_input);
+        btnImport = findViewById(R.id.btn_import);
+        btnCopyText = findViewById(R.id.btn_copy_text);
+        btnClearText = findViewById(R.id.btn_clear_text);
+
+        // Initialize DAO
+        flashcardDAO = new FlashcardDAO(this);
+        flashcardDAO.open();
+
+        // Prefill the EditText with example XML flashcard entries
+        etXmlInput.setText(
+                "<flashcard>\n" +
+                        "    <question>What year was New Orleans founded?</question>\n" +
+                        "    <answer>1718</answer>\n" +
+                        "    <searchTerm>New Orleans history</searchTerm>\n" +
+                        "    <userNote>This is relevant for Louisiana history.</userNote>\n" +
+                        "    <topic>History</topic>\n" +
+                        "    <topic>Geography</topic>\n" +
+                        "</flashcard>\n" +
+                        "<flashcard>\n" +
+                        "    <question>Which genre of music is New Orleans considered the birthplace of?</question>\n" +
+                        "    <answer>Jazz</answer>\n" +
+                        "    <searchTerm>New Orleans music</searchTerm>\n" +
+                        "    <userNote>This ties into the evolution of Jazz.</userNote>\n" +
+                        "    <topic>Music</topic>\n" +
+                        "    <topic>History</topic>\n" +
+                        "</flashcard>"
+        );
+
+        // Button click listener for importing flashcards
+        btnImport.setOnClickListener(v -> {
+            String xmlInput = etXmlInput.getText().toString().trim();
+            if (!xmlInput.isEmpty()) {
+                List<Flashcard> importedFlashcards = parseFlashcardsFromXml(xmlInput);
+                int skippedCount = 0;
+
+                for (Flashcard flashcard : importedFlashcards) {
+                    if (flashcard.getQuestion() == null || flashcard.getAnswer() == null) {
+                        skippedCount++;
+                    } else {
+                        flashcardDAO.createFlashcard(flashcard); // Save flashcard first
+                        // Associate the topics
+                        for (Topic topic : flashcard.getTopics()) {
+                            flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId()); // Associate the flashcard with the topic
+                        }
+                    }
+                }
+
+                String resultMessage = "Imported " + (importedFlashcards.size() - skippedCount) + " flashcards.";
+                if (skippedCount > 0) {
+                    resultMessage += " Skipped " + skippedCount + " flashcards due to missing question/answer.";
+                }
+                Toast.makeText(this, resultMessage, Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Please enter XML input.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Button click listener for copying the text from EditText
+        btnCopyText.setOnClickListener(v -> {
+            String textToCopy = etXmlInput.getText().toString().trim();
+            if (!textToCopy.isEmpty()) {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("Flashcard XML", textToCopy);
+                clipboard.setPrimaryClip(clip);
+                Toast.makeText(this, "Text copied to clipboard!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Nothing to copy!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Button click listener for clearing the EditText
+        btnClearText.setOnClickListener(v -> etXmlInput.setText(""));
+    }
+
+    private void preloadTopicCache() {
+        List<Topic> existingTopics = flashcardDAO.getAllTopics();
+        for (Topic topic : existingTopics) {
+            topicCache.put(topic.getName(), topic); // Preload the cache with all existing topics
+        }
+    }
+
+    // XML parsing method
+    private List<Flashcard> parseFlashcardsFromXml(String xmlInput) {
+        List<Flashcard> flashcards = new ArrayList<>();
+        Flashcard currentFlashcard = null;
+        String currentTag = null;
+
+        // Preload the topic cache from the database
+        preloadTopicCache();
+
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser parser = factory.newPullParser();
+            parser.setInput(new StringReader(xmlInput));
+
+            int eventType = parser.getEventType();
+
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                String tagName = parser.getName();
+
+                switch (eventType) {
+                    case XmlPullParser.START_TAG:
+                        if (tagName.equalsIgnoreCase("flashcard")) {
+                            currentFlashcard = new Flashcard();
+                            currentFlashcard.setTopics(new ArrayList<>()); // Reset topics for each flashcard
+                        } else if (currentFlashcard != null) {
+                            currentTag = tagName;
+                        }
+                        break;
+
+                    case XmlPullParser.TEXT:
+                        String text = parser.getText().trim();
+                        if (currentFlashcard != null && currentTag != null) {
+                            switch (currentTag.toLowerCase()) {
+                                case "question":
+                                    currentFlashcard.setQuestion(text);
+                                    break;
+                                case "answer":
+                                    currentFlashcard.setAnswer(text);
+                                    break;
+                                case "searchterm":
+                                    currentFlashcard.setSearchTerm(text);
+                                    break;
+                                case "usernote":
+                                    currentFlashcard.setUserNote(text);
+                                    break;
+                                case "topic":
+                                    Topic topic = getOrInsertTopic(text); // Use buffered topic
+                                    currentFlashcard.getTopics().add(topic); // Collect topics
+                                    break;
+                            }
+                        }
+                        break;
+
+                    case XmlPullParser.END_TAG:
+                        if (tagName.equalsIgnoreCase("flashcard") && currentFlashcard != null) {
+                            flashcards.add(currentFlashcard); // Add to the list of parsed flashcards
+                        }
+                        currentTag = null;
+                        break;
+                }
+                eventType = parser.next();
+            }
+        } catch (Exception e) {
+            Log.e("ImportFlashcards", "Error parsing XML", e);
+            Toast.makeText(this, "Error parsing XML", Toast.LENGTH_LONG).show();
+        }
+        return flashcards;
+    }
+
+    private Topic getOrInsertTopic(String topicName) {
+        // Check if the topic is already in the cache
+        if (topicCache.containsKey(topicName)) {
+            return topicCache.get(topicName); // Return from cache if it exists
+        }
+
+        // If not in cache, check the database
+        Topic topic = flashcardDAO.getTopicByName(topicName);
+        if (topic == null) {
+            // If not in database, insert it
+            topic = flashcardDAO.insertTopic(topicName);
+        }
+
+        // Add the topic to the cache
+        topicCache.put(topicName, topic);
+
+        return topic;
+    }
+
+    @Override
+    protected void onDestroy() {
+        flashcardDAO.close();
+        super.onDestroy();
+    }
+}
+ 
+// File: ListFlashcardsActivity.java
+package com.example.flashcardapp;
+
+import android.os.Bundle;
+import android.widget.ListView;
+import android.widget.ToggleButton;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ListFlashcardsActivity extends AppCompatActivity {
+
+    private ToggleButton toggleReviewTime;
+    private FlashcardDAO flashcardDAO;
+    private List<Flashcard> flashcards;
+    private FlashcardAdapter flashcardAdapter; // Assuming you're using a RecyclerView adapter
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_list_flashcards);
+
+        // Initialize views
+        toggleReviewTime = findViewById(R.id.toggle_review_time);
+        flashcardDAO = new FlashcardDAO(this);
+        flashcardDAO.open();
+
+        // Set up the adapter and the RecyclerView
+        flashcards = new ArrayList<>();
+        flashcardAdapter = new FlashcardAdapter(this, flashcards); // Adjust the constructor as per your adapter
+        RecyclerView recyclerView = findViewById(R.id.recycler_view_flashcards);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(flashcardAdapter);
+
+        // Load initial data (future questions ascending)
+        loadFlashcards(true);
+
+        // Set toggle button listener to switch between past and future
+        toggleReviewTime.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                // Show past questions, descending order
+                loadFlashcards(false);
+            } else {
+                // Show future questions, ascending order
+                loadFlashcards(true);
+            }
+        });
+    }
+
+    private void loadFlashcards(boolean showFuture) {
+        // Clear the current list
+        flashcards.clear();
+
+        if (showFuture) {
+            // Load questions in the future, ordered ascending
+            flashcards.addAll(flashcardDAO.getFutureFlashcards());
+        } else {
+            // Load questions in the past, ordered descending
+            flashcards.addAll(flashcardDAO.getPastFlashcards());
+        }
+
+        // Notify the adapter that the data has changed
+        flashcardAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    protected void onDestroy() {
+        flashcardDAO.close();
+        super.onDestroy();
+    }
+} 
+// File: MainActivity.java
+package com.example.flashcardapp;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    private Button btnAddFlashcard, btnReviewFlashcards, btnListFlashcards, btnImportExport;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+         btnAddFlashcard = findViewById(R.id.btn_action);
+         btnReviewFlashcards = findViewById(R.id.btn_review_flashcards);
+         btnListFlashcards = findViewById(R.id.btn_list_flashcards);
+         btnImportExport = findViewById(R.id.btn_import_export);
+
+         btnAddFlashcard.setOnClickListener(v -> {
+            // FlashcardDAO flashcardDAO = new FlashcardDAO(this);
+            // flashcardDAO.open();
+            // flashcardDAO.deleteAllData();
+
+           //  Intent intent = new Intent(MainActivity.this, AddFlashcardActivity.class);
+             Intent intent = new Intent(MainActivity.this, ChatGPTActivity.class);
+              startActivity(intent);
+         });
+
+
+
+
+         btnReviewFlashcards.setOnClickListener(v -> {
+             Intent intent = new Intent(MainActivity.this, ReviewFlashcardsActivity.class);
+             startActivity(intent);
+         });
+
+         btnListFlashcards.setOnClickListener(v -> {
+             Intent intent = new Intent(MainActivity.this, ListFlashcardsActivity.class);
+             startActivity(intent);
+         });
+
+         btnImportExport.setOnClickListener(v -> {
+             Intent intent = new Intent(MainActivity.this, ImportFlashcardsActivity.class);
+             startActivity(intent);
+         });
+    }
+}
+ 
+// File: ReviewFlashcardsActivity.java
+package com.example.flashcardapp;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class ReviewFlashcardsActivity extends AppCompatActivity {
+
+    private TextView tvQuestion, tvAnswer;
+    private Button btnShowAnswer;
+    private Button btnForgot, btnStruggling, btnUnsure, btnOkay, btnGood, btnPerfect;
+    private FlashcardDAO flashcardDAO;
+    private Flashcard currentFlashcard;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_review_flashcards);
+
+        // Initialize views
+        tvQuestion = findViewById(R.id.tv_question);
+        tvAnswer = findViewById(R.id.tv_answer);
+        btnShowAnswer = findViewById(R.id.btn_show_answer);
+        btnForgot = findViewById(R.id.btn_forgot);
+        btnStruggling = findViewById(R.id.btn_struggling);
+        btnUnsure = findViewById(R.id.btn_unsure);
+        btnOkay = findViewById(R.id.btn_okay);
+        btnGood = findViewById(R.id.btn_good);
+        btnPerfect = findViewById(R.id.btn_perfect);
+
+        // Hide buttons by default
+        findViewById(R.id.low_confidence_buttons).setVisibility(View.GONE);
+        findViewById(R.id.high_confidence_buttons).setVisibility(View.GONE);
+
+        flashcardDAO = new FlashcardDAO(this);
+        flashcardDAO.open();
+
+        // Start the review process
+        showNextFlashcard();
+
+        btnShowAnswer.setOnClickListener(v -> {
+            if (currentFlashcard != null) {
+                tvAnswer.setText(currentFlashcard.getAnswer());
+                tvAnswer.setVisibility(View.VISIBLE);
+
+                // Show confidence buttons
+                findViewById(R.id.low_confidence_buttons).setVisibility(View.VISIBLE);
+                findViewById(R.id.high_confidence_buttons).setVisibility(View.VISIBLE);
+            }
+        });
+
+        // Confidence button listeners
+        btnForgot.setOnClickListener(v -> handleConfidence(0));
+        btnStruggling.setOnClickListener(v -> handleConfidence(1));
+        btnUnsure.setOnClickListener(v -> handleConfidence(2));
+        btnOkay.setOnClickListener(v -> handleConfidence(3));
+        btnGood.setOnClickListener(v -> handleConfidence(4));
+        btnPerfect.setOnClickListener(v -> handleConfidence(5));
+    }
+
+    private void showNextFlashcard() {
+        // Fetch the next due flashcard from the database
+        currentFlashcard = flashcardDAO.getNextDueFlashcard(System.currentTimeMillis());
+
+        if (currentFlashcard != null) {
+            // Display the flashcard
+            tvQuestion.setText(currentFlashcard.getQuestion());
+            tvAnswer.setVisibility(View.GONE);
+            findViewById(R.id.low_confidence_buttons).setVisibility(View.GONE);
+            findViewById(R.id.high_confidence_buttons).setVisibility(View.GONE);
+        } else {
+            // Show a Toast message if no flashcards are due
+            Toast.makeText(this, "No flashcards due for review!", Toast.LENGTH_SHORT).show();
+            finish(); // End the activity if there are no flashcards left
+        }
+    }
+
+    private void handleConfidence(int quality) {
+        long previousReviewTime = currentFlashcard.getNextReview(); // Store the previous next_review time
+
+        // Update the flashcard after review (this will modify nextReview time)
+        updateFlashcardAfterReview(currentFlashcard, quality);
+
+        // Calculate the time difference between the new and old next_review times
+        long timePushed = currentFlashcard.getNextReview()  - System.currentTimeMillis();
+
+        // Use the utility method to format the time difference and show a Toast
+        String timeDifference = TimeUtils.formatTimeDifference(timePushed);
+        Toast.makeText(this, "Next review in: " + timeDifference, Toast.LENGTH_LONG).show();
+
+        // Continue to the next flashcard or finish the session
+        showNextFlashcard();
+    }
+
+
+    // Updated the review algorithm to use faster intervals with seconds-based increments.
+    private void updateFlashcardAfterReview(Flashcard flashcard, int quality) {
+        int interval = flashcard.getInterval(); // Current interval in seconds
+        int repetition = flashcard.getRepetition(); // Current repetition count
+        long currentTime = System.currentTimeMillis();
+        long lastReviewTime = flashcard.getNextReview() - interval * 1000L; // Calculate when the last review was
+
+        // Handle different quality values and set new interval
+        switch (quality) {
+            case 0:
+                interval = 1; // 0 = 1s
+                repetition = 0; // Reset repetition if wrong
+                break;
+            case 1:
+                interval = 10; // 1 = 10s
+                repetition = 0; // Reset repetition if wrong
+                break;
+            case 2:
+                interval = 20; // 2 = 20s
+                repetition = 0; // Reset repetition if wrong
+                break;
+            case 3:
+                interval = 30; // 3 = 30s
+                repetition += 1; // Increment repetition if right
+                break;
+            case 4:
+                interval = 1600; // 4 = last interval * 2
+                repetition += 1; // Increment repetition if right
+                break;
+            case 5:
+                // 5 = time lapsed since the last time I saw the question * 2
+                long timeLapsed = (currentTime - lastReviewTime) / 1000; // Convert time lapsed to seconds
+                interval = (int) (timeLapsed * 2)+3600;
+                repetition += 1; // Increment repetition if right
+                break;
+            default:
+                // Fallback for unexpected values (just in case)
+                interval = 30;
+                repetition = 0; // Reset repetition just in case
+                break;
+        }
+
+        // Calculate the next review time
+        long nextReview = currentTime + interval * 1000L;
+
+        // Update flashcard with the new interval, next review time, and repetition count
+        flashcard.setInterval(interval);
+        flashcard.setNextReview(nextReview);
+        flashcard.setRepetition(repetition); // Save repetition count
+
+        // Save flashcard to the database
+        flashcardDAO.updateFlashcard(flashcard);
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        flashcardDAO.close();
+        super.onDestroy();
+    }
+}
+ 
+package com.example.flashcardapp;
+
+public class TimeUtils {
+
+    // Method to convert milliseconds to dd-hh:mm:ss format
+    public static String formatTimeDifference(long timeInMillis) {
+        long seconds = timeInMillis / 1000;
+        long days = seconds / (24 * 3600);
+        seconds %= (24 * 3600);
+        long hours = seconds / 3600;
+        seconds %= 3600;
+        long minutes = seconds / 60;
+        seconds %= 60;
+
+        return String.format("%02d-%02d:%02d:%02d", days, hours, minutes, seconds);
+    }
+}
+ 
+// File: Topic.java
+package com.example.flashcardapp;
+
+public class Topic {
+    private int id;
+    private String name;
+
+    // Constructors
+    public Topic() {
+        // Default constructor
+    }
+
+    public Topic(String name) {
+        this.name = name;
+    }
+
+    public Topic(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    // Getters and Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+}
+ 
+// File: XmlParser.java
+package com.example.flashcardapp;
+
+import android.util.Xml;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
+
+public class XmlParser {
+
+    // Method to parse XML input and return a list of Flashcard objects
+    public List<Flashcard> parse(String xmlInput) throws XmlPullParserException, Exception {
+        List<Flashcard> flashcards = new ArrayList<>();
+        XmlPullParser parser = Xml.newPullParser();
+        parser.setInput(new StringReader(xmlInput));
+        int eventType = parser.getEventType();
+        Flashcard currentFlashcard = null;
+
+        while (eventType != XmlPullParser.END_DOCUMENT) {
+            String name;
+            switch (eventType) {
+                case XmlPullParser.START_TAG:
+                    name = parser.getName();
+                    if (name.equalsIgnoreCase("flashcard")) {
+                        currentFlashcard = new Flashcard();
+                    } else if (currentFlashcard != null) {
+                        if (name.equalsIgnoreCase("question")) {
+                            currentFlashcard.setQuestion(parser.nextText());
+                        } else if (name.equalsIgnoreCase("answer")) {
+                            currentFlashcard.setAnswer(parser.nextText());
+                        }
+                    }
+                    break;
+                case XmlPullParser.END_TAG:
+                    name = parser.getName();
+                    if (name.equalsIgnoreCase("flashcard") && currentFlashcard != null) {
+                        flashcards.add(currentFlashcard);
+                        currentFlashcard = null;
+                    }
+                    break;
+            }
+            eventType = parser.next();
+        }
+        return flashcards;
+    }
+}
+ 
