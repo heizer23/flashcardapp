@@ -1,20 +1,32 @@
 // File: ReviewFlashcardsActivity.java
 package com.example.flashcardapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class ReviewFlashcardsActivity extends AppCompatActivity {
 
+
+    private int totalQuestionsCount = 0; // Counter for total questions
+    private int questionsMovedCount = 0; // Counter for questions moved by >1 day
+    private int score = 0; // Score for session
+    private TextView tvTotalQuestions, tvQuestionsMoved, tvPast, tvFuture;
     private TextView tvQuestion, tvAnswer;
     private Button btnShowAnswer;
     private Button btnForgot, btnStruggling, btnUnsure, btnOkay, btnGood, btnPerfect;
     private FlashcardDAO flashcardDAO;
     private Flashcard currentFlashcard;
+
+    private Set<Integer> seenFlashcards = new HashSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +34,10 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_review_flashcards);
 
         // Initialize views
+        tvTotalQuestions = findViewById(R.id.tv_total_questions);
+        tvQuestionsMoved = findViewById(R.id.tv_questions_moved);
+        tvPast = findViewById(R.id.tv_past_questions);
+        tvFuture = findViewById(R.id.tv_future_questions);
         tvQuestion = findViewById(R.id.tv_question);
         tvAnswer = findViewById(R.id.tv_answer);
         btnShowAnswer = findViewById(R.id.btn_show_answer);
@@ -41,6 +57,8 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
 
         // Start the review process
         showNextFlashcard();
+
+        tvQuestion.setOnClickListener(v -> openEditQuestion());
 
         btnShowAnswer.setOnClickListener(v -> {
             if (currentFlashcard != null) {
@@ -72,6 +90,16 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
             tvAnswer.setVisibility(View.GONE);
             findViewById(R.id.low_confidence_buttons).setVisibility(View.GONE);
             findViewById(R.id.high_confidence_buttons).setVisibility(View.GONE);
+
+
+
+            // Increment and update total question count
+
+            // Track the flashcard as seen
+            seenFlashcards.add(currentFlashcard.getId());
+            totalQuestionsCount++;
+            updateCounters();
+
         } else {
             // Show a Toast message if no flashcards are due
             Toast.makeText(this, "No flashcards due for review!", Toast.LENGTH_SHORT).show();
@@ -92,8 +120,27 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
         String timeDifference = TimeUtils.formatTimeDifference(timePushed);
         Toast.makeText(this, "Next review in: " + timeDifference, Toast.LENGTH_LONG).show();
 
+        // Update counters based on the time moved and quality score
+        if (timePushed > 24 * 60 * 60 * 1000L) { // More than one day
+            questionsMovedCount++;
+        }
+
+        // Update score based on quality rating
+        score += quality;
+
+        // Update UI counters
+        updateCounters();
+
         // Continue to the next flashcard or finish the session
         showNextFlashcard();
+    }
+
+    private void updateCounters() {
+        int[] counts = flashcardDAO.getPastAndFutureQuestionsCount();
+        tvTotalQuestions.setText(String.valueOf(seenFlashcards.size()));
+        tvQuestionsMoved.setText(String.valueOf(questionsMovedCount));
+        tvPast.setText(String.valueOf(counts[0]));
+        tvFuture.setText(String.valueOf(counts[1]));
     }
 
 
@@ -149,6 +196,14 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
 
         // Save flashcard to the database
         flashcardDAO.updateFlashcard(flashcard);
+    }
+
+    private void openEditQuestion() {
+        if (currentFlashcard != null) {
+            Intent intent = new Intent(this, EditFlashcardActivity.class);
+            intent.putExtra("FLASHCARD_ID", currentFlashcard.getId()); // Pass the ID of the flashcard
+            startActivity(intent);
+        }
     }
 
 

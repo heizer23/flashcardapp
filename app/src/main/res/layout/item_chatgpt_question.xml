@@ -1,0 +1,42 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/tv_question"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Question" />
+
+    <TextView
+        android:id="@+id/tv_answer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Answer" />
+
+    <TextView
+        android:id="@+id/tv_search_term"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Search Term" />
+
+    <TextView
+        android:id="@+id/tv_user_note"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="User Note" />
+
+    <TextView
+        android:id="@+id/tv_topics"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Topics" />
+
+    <Button
+        android:id="@+id/btn_recreate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Recreate" />
+</LinearLayout>

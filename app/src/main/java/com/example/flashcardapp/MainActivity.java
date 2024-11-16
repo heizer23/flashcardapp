@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
             // flashcardDAO.deleteAllData();
 
            //  Intent intent = new Intent(MainActivity.this, AddFlashcardActivity.class);
-             Intent intent = new Intent(MainActivity.this, ChatGPTActivity.class);
+             Intent intent = new Intent(MainActivity.this, TopicSelectionActivity.class);
               startActivity(intent);
          });
 

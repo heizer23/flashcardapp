@@ -80,81 +80,12 @@ public class FlashcardDAO {
         return flashcard;
     }
 
-    // Method to clear all topic associations for a flashcard
-    public void clearTopicsForFlashcard(int flashcardId) {
-        int rowsDeleted = database.delete(
-                FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF,
-                FlashcardDatabaseHelper.COLUMN_FLASHCARD_ID + " = ?",
-                new String[]{String.valueOf(flashcardId)}
-        );
-        Log.d("Database", "Rows deleted: " + rowsDeleted);
-    }
-
-    // Method to insert a topic
-    public Topic insertTopic(String topicName) {
-        ContentValues values = new ContentValues();
-        values.put(FlashcardDatabaseHelper.COLUMN_TOPIC_NAME, topicName);
-
-        long topicId = database.insertWithOnConflict(
-                FlashcardDatabaseHelper.TABLE_TOPICS, null, values, SQLiteDatabase.CONFLICT_IGNORE);
-
-        Topic topic = new Topic(topicName);
-        topic.setId((int) topicId);
-        return topic;
-    }
-
-    // Method to associate a flashcard with a topic
-    public void associateFlashcardWithTopic(int flashcardId, int topicId) {
-        ContentValues values = new ContentValues();
-        values.put(FlashcardDatabaseHelper.COLUMN_FLASHCARD_ID, flashcardId);
-        values.put(FlashcardDatabaseHelper.COLUMN_TOPIC_ID_REF, topicId);
-
-        database.insert(FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF, null, values);
-    }
-
-    // Get all topics for a flashcard
-    public List<Topic> getTopicsForFlashcard(int flashcardId) {
-        List<Topic> topics = new ArrayList<>();
-        Cursor cursor = database.rawQuery("SELECT * FROM " + FlashcardDatabaseHelper.TABLE_TOPICS + " t" +
-                " INNER JOIN " + FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF + " c" +
-                " ON t." + FlashcardDatabaseHelper.COLUMN_TOPIC_ID + " = c." + FlashcardDatabaseHelper.COLUMN_TOPIC_ID_REF +
-                " WHERE c." + FlashcardDatabaseHelper.COLUMN_FLASHCARD_ID + " = ?", new String[]{String.valueOf(flashcardId)});
-
-        if (cursor.moveToFirst()) {
-            do {
-                Topic topic = new Topic();
-                topic.setId(cursor.getInt(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_TOPIC_ID)));
-                topic.setName(cursor.getString(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_TOPIC_NAME)));
-                topics.add(topic);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return topics;
-    }
-
-    // Method to retrieve all flashcards
-    public List<Flashcard> getAllFlashcards() {
-        List<Flashcard> flashcards = new ArrayList<>();
-        Cursor cursor = database.query(
-                FlashcardDatabaseHelper.TABLE_FLASHCARDS, flashcardColumns,
-                null, null, null, null, FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " asc "
-        );
-
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            Flashcard flashcard = cursorToFlashcard(cursor);
-            flashcards.add(flashcard);
-            cursor.moveToNext();
-        }
-        cursor.close();
-        return flashcards;
-    }
 
     public Flashcard getNextDueFlashcard(long currentTime) {
         Flashcard flashcard = null;
 
         // Query to get the flashcard with the closest next_review time that is due
-        String query = "SELECT * FROM " + FlashcardDatabaseHelper.TABLE_FLASHCARDS +
+        String query = "SELECT * FROM view_filtered_flashcards " +
                 " WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " <= ?" +
                 " ORDER BY " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " DESC " +
                 " LIMIT 1"; // Limit to the first result
@@ -190,12 +121,75 @@ public class FlashcardDAO {
         );
     }
 
+    // Method to clear all topic associations for a flashcard
+    public void clearTopicsForFlashcard(int flashcardId) {
+        int rowsDeleted = database.delete(
+                FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF,
+                FlashcardDatabaseHelper.COLUMN_FLASHCARD_ID + " = ?",
+                new String[]{String.valueOf(flashcardId)}
+        );
+        Log.d("Database", "Rows deleted: " + rowsDeleted);
+    }
+
+    // Method to insert a topic
+    public Topic insertTopic(String topicName) {
+        ContentValues values = new ContentValues();
+        values.put(FlashcardDatabaseHelper.COLUMN_TOPIC_NAME, topicName);
+
+        long topicId = database.insertWithOnConflict(
+                FlashcardDatabaseHelper.TABLE_TOPICS, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+
+        Topic topic = new Topic(topicName);
+        topic.setId((int) topicId);
+        return topic;
+    }
+
+    public void updateTopicSelection(int topicId, boolean isSelected) {
+        ContentValues values = new ContentValues();
+        values.put(FlashcardDatabaseHelper.COLUMN_TOPIC_SELECTED, isSelected ? 1 : 0);
+        database.update(
+                FlashcardDatabaseHelper.TABLE_TOPICS,
+                values,
+                FlashcardDatabaseHelper.COLUMN_TOPIC_ID + " = ?",
+                new String[]{String.valueOf(topicId)}
+        );
+    }
+
+    // Method to associate a flashcard with a topic
+    public void associateFlashcardWithTopic(int flashcardId, int topicId) {
+        ContentValues values = new ContentValues();
+        values.put(FlashcardDatabaseHelper.COLUMN_FLASHCARD_ID, flashcardId);
+        values.put(FlashcardDatabaseHelper.COLUMN_TOPIC_ID_REF, topicId);
+
+        database.insert(FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF, null, values);
+    }
+
+    // Get all topics for a flashcard
+    public List<Topic> getTopicsForFlashcard(int flashcardId) {
+        List<Topic> topics = new ArrayList<>();
+        Cursor cursor = database.rawQuery("SELECT * FROM " + FlashcardDatabaseHelper.TABLE_TOPICS + " t" +
+                " INNER JOIN " + FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF + " c" +
+                " ON t." + FlashcardDatabaseHelper.COLUMN_TOPIC_ID + " = c." + FlashcardDatabaseHelper.COLUMN_TOPIC_ID_REF +
+                " WHERE c." + FlashcardDatabaseHelper.COLUMN_FLASHCARD_ID + " = ?", new String[]{String.valueOf(flashcardId)});
+
+        if (cursor.moveToFirst()) {
+            do {
+                Topic topic = new Topic();
+                topic.setId(cursor.getInt(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_TOPIC_ID)));
+                topic.setName(cursor.getString(cursor.getColumnIndexOrThrow(FlashcardDatabaseHelper.COLUMN_TOPIC_NAME)));
+                topics.add(topic);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return topics;
+    }
+
     // Method to retrieve all topics
     public List<Topic> getAllTopics() {
         List<Topic> topics = new ArrayList<>();
         Cursor cursor = database.query(
                 FlashcardDatabaseHelper.TABLE_TOPICS,
-                new String[]{FlashcardDatabaseHelper.COLUMN_TOPIC_ID, FlashcardDatabaseHelper.COLUMN_TOPIC_NAME},
+                new String[]{FlashcardDatabaseHelper.COLUMN_TOPIC_ID, FlashcardDatabaseHelper.COLUMN_TOPIC_NAME,FlashcardDatabaseHelper.COLUMN_TOPIC_SELECTED},
                 null, null, null, null, null
         );
 
@@ -203,7 +197,8 @@ public class FlashcardDAO {
             do {
                 @SuppressLint("Range") int topicId = cursor.getInt(cursor.getColumnIndex(FlashcardDatabaseHelper.COLUMN_TOPIC_ID));
                 @SuppressLint("Range") String topicName = cursor.getString(cursor.getColumnIndex(FlashcardDatabaseHelper.COLUMN_TOPIC_NAME));
-                topics.add(new Topic(topicId, topicName));
+                @SuppressLint("Range") Boolean topicSelected = cursor.getInt(cursor.getColumnIndex(FlashcardDatabaseHelper.COLUMN_TOPIC_SELECTED)) ==1;
+                topics.add(new Topic(topicId, topicName, topicSelected));
             } while (cursor.moveToNext());
 
             cursor.close();
@@ -211,29 +206,6 @@ public class FlashcardDAO {
 
         return topics;
     }
-
-    public void testCursorForTopics() {
-        // Use the same query as in your getTopicsForFlashcard method
-        Cursor cursor = database.query(
-                FlashcardDatabaseHelper.TABLE_TOPICS,
-                new String[]{FlashcardDatabaseHelper.COLUMN_TOPIC_ID, FlashcardDatabaseHelper.COLUMN_TOPIC_NAME},
-                null, null, null, null, null
-        );
-        Log.d("Test Cursor Columns", "Soll: " + FlashcardDatabaseHelper.COLUMN_TOPIC_ID +  FlashcardDatabaseHelper.COLUMN_TOPIC_NAME);
-
-        // Log the column names to check if the columns are being retrieved correctly
-        if (cursor != null && cursor.moveToFirst()) {
-            String[] columnNames = cursor.getColumnNames();
-            for (String columnName : columnNames) {
-                Log.d("Test Cursor Columns", "Column: " + columnName);
-            }
-            cursor.close(); // Close cursor after using it
-        } else {
-            Log.d("Test Cursor", "Cursor is empty or null");
-        }
-    }
-
-
 
     // Method to retrieve a topic by name
     public Topic getTopicByName(String topicName) {
@@ -249,7 +221,8 @@ public class FlashcardDAO {
         if (cursor != null && cursor.moveToFirst()) {
             @SuppressLint("Range") int topicId = cursor.getInt(cursor.getColumnIndex(FlashcardDatabaseHelper.COLUMN_TOPIC_ID));
             @SuppressLint("Range") String retrievedTopicName = cursor.getString(cursor.getColumnIndex(FlashcardDatabaseHelper.COLUMN_TOPIC_NAME));
-            topic = new Topic(topicId, retrievedTopicName);
+            @SuppressLint("Range") Boolean topicSelected = cursor.getInt(cursor.getColumnIndex(FlashcardDatabaseHelper.COLUMN_TOPIC_SELECTED)) == 1;
+            topic = new Topic(topicId, retrievedTopicName, topicSelected);
             cursor.close();
         }
 
@@ -276,21 +249,11 @@ public class FlashcardDAO {
         return flashcard;
     }
 
-    public void deleteAllData() {
-        // Deleting all entries from each table
-        database.delete(FlashcardDatabaseHelper.TABLE_FLASHCARDS, null, null);
-        database.delete(FlashcardDatabaseHelper.TABLE_TOPICS, null, null);
-        database.delete(FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF, null, null);
-
-        Log.d("Database", "All data deleted from flashcards, topics, and cross-reference tables.");
-    }
-
     // Get flashcards with next_review in the future (ascending)
     public List<Flashcard> getFutureFlashcards() {
         List<Flashcard> flashcards = new ArrayList<>();
 
-        String query = "SELECT * FROM " + FlashcardDatabaseHelper.TABLE_FLASHCARDS +
-                " WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " > ?" +
+        String query = "SELECT * FROM view_filtered_flashcards WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " > ?" +
                 " ORDER BY " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " ASC";
 
         Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(System.currentTimeMillis())});
@@ -305,12 +268,10 @@ public class FlashcardDAO {
         return flashcards;
     }
 
-    // Get flashcards with next_review in the past (descending)
     public List<Flashcard> getPastFlashcards() {
         List<Flashcard> flashcards = new ArrayList<>();
 
-        String query = "SELECT * FROM " + FlashcardDatabaseHelper.TABLE_FLASHCARDS +
-                " WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " <= ?" +
+        String query = "SELECT * FROM view_filtered_flashcards WHERE " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " <= ?" +
                 " ORDER BY " + FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " DESC";
 
         Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(System.currentTimeMillis())});
@@ -324,5 +285,27 @@ public class FlashcardDAO {
 
         return flashcards;
     }
+
+
+    public int[] getPastAndFutureQuestionsCount() {
+
+        long currentTime = System.currentTimeMillis();
+
+
+        String query = "SELECT " +
+                "SUM(CASE WHEN nextReview <= ? THEN 1 ELSE 0 END) AS pastCount, " +
+                "SUM(CASE WHEN nextReview > ? THEN 1 ELSE 0 END) AS futureCount " +
+                "FROM view_filtered_flashcards";
+
+        Cursor cursor = database.rawQuery(query, new String[]{String.valueOf(currentTime), String.valueOf(currentTime)});
+        cursor.moveToFirst();
+        @SuppressLint("Range") int pastCount = cursor.getInt(cursor.getColumnIndex("pastCount"));
+        @SuppressLint("Range") int futureCount = cursor.getInt(cursor.getColumnIndex("futureCount"));
+        cursor.close();
+
+        return new int[]{pastCount, futureCount}; // Return both counts as an array
+    }
+
+    // Get flashcards with next_review in the past (descending)
 
 }

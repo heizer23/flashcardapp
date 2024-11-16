@@ -1,4 +1,3 @@
-// File: ImportFlashcardsActivity.java
 package com.example.flashcardapp;
 
 import android.content.ClipData;
@@ -10,9 +9,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserFactory;
-import java.io.StringReader;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +18,7 @@ import java.util.Map;
 
 public class ImportFlashcardsActivity extends AppCompatActivity {
 
-    private EditText etXmlInput;
+    private EditText etJsonInput;
     private Button btnImport, btnCopyText, btnClearText;
     private FlashcardDAO flashcardDAO;
     private Map<String, Topic> topicCache = new HashMap<>();
@@ -31,7 +29,7 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_import_flashcards);
 
         // Initialize views
-        etXmlInput = findViewById(R.id.et_xml_input);
+        etJsonInput = findViewById(R.id.et_xml_input);  // Change ID if needed
         btnImport = findViewById(R.id.btn_import);
         btnCopyText = findViewById(R.id.btn_copy_text);
         btnClearText = findViewById(R.id.btn_clear_text);
@@ -40,31 +38,25 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
         flashcardDAO = new FlashcardDAO(this);
         flashcardDAO.open();
 
-        // Prefill the EditText with example XML flashcard entries
-        etXmlInput.setText(
-                "<flashcard>\n" +
-                        "    <question>What year was New Orleans founded?</question>\n" +
-                        "    <answer>1718</answer>\n" +
-                        "    <searchTerm>New Orleans history</searchTerm>\n" +
-                        "    <userNote>This is relevant for Louisiana history.</userNote>\n" +
-                        "    <topic>History</topic>\n" +
-                        "    <topic>Geography</topic>\n" +
-                        "</flashcard>\n" +
-                        "<flashcard>\n" +
-                        "    <question>Which genre of music is New Orleans considered the birthplace of?</question>\n" +
-                        "    <answer>Jazz</answer>\n" +
-                        "    <searchTerm>New Orleans music</searchTerm>\n" +
-                        "    <userNote>This ties into the evolution of Jazz.</userNote>\n" +
-                        "    <topic>Music</topic>\n" +
-                        "    <topic>History</topic>\n" +
-                        "</flashcard>"
+        // Prefill the EditText with example JSON flashcard entries
+        etJsonInput.setText(
+                "[{\"question\": \"What year was New Orleans founded?\"," +
+                        " \"answer\": \"1718\"," +
+                        " \"searchTerm\": \"New Orleans history\"," +
+                        " \"userNote\": \"This is relevant for Louisiana history.\"," +
+                        " \"topics\": [\"History\", \"Geography\"]}," +
+                        "{\"question\": \"Which genre of music is New Orleans considered the birthplace of?\"," +
+                        " \"answer\": \"Jazz\"," +
+                        " \"searchTerm\": \"New Orleans music\"," +
+                        " \"userNote\": \"This ties into the evolution of Jazz.\"," +
+                        " \"topics\": [\"Music\", \"History\"]}]"
         );
 
-        // Button click listener for importing flashcards
+        // Import button listener
         btnImport.setOnClickListener(v -> {
-            String xmlInput = etXmlInput.getText().toString().trim();
-            if (!xmlInput.isEmpty()) {
-                List<Flashcard> importedFlashcards = parseFlashcardsFromXml(xmlInput);
+            String jsonInput = etJsonInput.getText().toString().trim();
+            if (!jsonInput.isEmpty()) {
+                List<Flashcard> importedFlashcards = parseFlashcardsFromJson(jsonInput);
                 int skippedCount = 0;
 
                 for (Flashcard flashcard : importedFlashcards) {
@@ -72,9 +64,8 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
                         skippedCount++;
                     } else {
                         flashcardDAO.createFlashcard(flashcard); // Save flashcard first
-                        // Associate the topics
                         for (Topic topic : flashcard.getTopics()) {
-                            flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId()); // Associate the flashcard with the topic
+                            flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId()); // Associate flashcard with topics
                         }
                     }
                 }
@@ -85,16 +76,16 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
                 }
                 Toast.makeText(this, resultMessage, Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(this, "Please enter XML input.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please enter JSON input.", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Button click listener for copying the text from EditText
+        // Copy text button listener
         btnCopyText.setOnClickListener(v -> {
-            String textToCopy = etXmlInput.getText().toString().trim();
+            String textToCopy = etJsonInput.getText().toString().trim();
             if (!textToCopy.isEmpty()) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText("Flashcard XML", textToCopy);
+                ClipData clip = ClipData.newPlainText("Flashcard JSON", textToCopy);
                 clipboard.setPrimaryClip(clip);
                 Toast.makeText(this, "Text copied to clipboard!", Toast.LENGTH_SHORT).show();
             } else {
@@ -102,8 +93,8 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
             }
         });
 
-        // Button click listener for clearing the EditText
-        btnClearText.setOnClickListener(v -> etXmlInput.setText(""));
+        // Clear text button listener
+        btnClearText.setOnClickListener(v -> etJsonInput.setText(""));
     }
 
     private void preloadTopicCache() {
@@ -113,71 +104,41 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
         }
     }
 
-    // XML parsing method
-    private List<Flashcard> parseFlashcardsFromXml(String xmlInput) {
+    // JSON parsing method
+    private List<Flashcard> parseFlashcardsFromJson(String jsonInput) {
         List<Flashcard> flashcards = new ArrayList<>();
-        Flashcard currentFlashcard = null;
-        String currentTag = null;
-
-        // Preload the topic cache from the database
-        preloadTopicCache();
+        preloadTopicCache();  // Load topics from database
 
         try {
-            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-            XmlPullParser parser = factory.newPullParser();
-            parser.setInput(new StringReader(xmlInput));
+            JSONArray flashcardsArray = new JSONArray(jsonInput);
 
-            int eventType = parser.getEventType();
+            for (int i = 0; i < flashcardsArray.length(); i++) {
+                JSONObject flashcardJson = flashcardsArray.getJSONObject(i);
+                Flashcard flashcard = new Flashcard();
 
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                String tagName = parser.getName();
+                // Parse flashcard fields
+                flashcard.setQuestion(flashcardJson.optString("question"));
+                flashcard.setAnswer(flashcardJson.optString("answer"));
+                flashcard.setSearchTerm(flashcardJson.optString("searchTerm"));
+                flashcard.setUserNote(flashcardJson.optString("userNote"));
 
-                switch (eventType) {
-                    case XmlPullParser.START_TAG:
-                        if (tagName.equalsIgnoreCase("flashcard")) {
-                            currentFlashcard = new Flashcard();
-                            currentFlashcard.setTopics(new ArrayList<>()); // Reset topics for each flashcard
-                        } else if (currentFlashcard != null) {
-                            currentTag = tagName;
-                        }
-                        break;
-
-                    case XmlPullParser.TEXT:
-                        String text = parser.getText().trim();
-                        if (currentFlashcard != null && currentTag != null) {
-                            switch (currentTag.toLowerCase()) {
-                                case "question":
-                                    currentFlashcard.setQuestion(text);
-                                    break;
-                                case "answer":
-                                    currentFlashcard.setAnswer(text);
-                                    break;
-                                case "searchterm":
-                                    currentFlashcard.setSearchTerm(text);
-                                    break;
-                                case "usernote":
-                                    currentFlashcard.setUserNote(text);
-                                    break;
-                                case "topic":
-                                    Topic topic = getOrInsertTopic(text); // Use buffered topic
-                                    currentFlashcard.getTopics().add(topic); // Collect topics
-                                    break;
-                            }
-                        }
-                        break;
-
-                    case XmlPullParser.END_TAG:
-                        if (tagName.equalsIgnoreCase("flashcard") && currentFlashcard != null) {
-                            flashcards.add(currentFlashcard); // Add to the list of parsed flashcards
-                        }
-                        currentTag = null;
-                        break;
+                // Parse and cache topics
+                JSONArray topicsArray = flashcardJson.optJSONArray("topics");
+                if (topicsArray != null) {
+                    List<Topic> topics = new ArrayList<>();
+                    for (int j = 0; j < topicsArray.length(); j++) {
+                        String topicName = topicsArray.getString(j);
+                        topics.add(getOrInsertTopic(topicName));
+                    }
+                    flashcard.setTopics(topics);
                 }
-                eventType = parser.next();
+
+                flashcards.add(flashcard);  // Add the parsed flashcard
             }
+
         } catch (Exception e) {
-            Log.e("ImportFlashcards", "Error parsing XML", e);
-            Toast.makeText(this, "Error parsing XML", Toast.LENGTH_LONG).show();
+            Log.e("ImportFlashcards", "Error parsing JSON", e);
+            Toast.makeText(this, "Error parsing JSON", Toast.LENGTH_LONG).show();
         }
         return flashcards;
     }

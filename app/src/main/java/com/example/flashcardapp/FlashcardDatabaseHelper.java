@@ -7,7 +7,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class FlashcardDatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "flashcards.db";
-    private static final int DATABASE_VERSION = 2;  // Incremented for new tables
+    private static final int DATABASE_VERSION = 10;  // Incremented for new tables
+
 
     // Table and column names
     public static final String TABLE_FLASHCARDS = "flashcards";
@@ -28,6 +29,7 @@ public class FlashcardDatabaseHelper extends SQLiteOpenHelper {
     // Topic columns
     public static final String COLUMN_TOPIC_ID = "id";
     public static final String COLUMN_TOPIC_NAME = "name";
+    public static final String COLUMN_TOPIC_SELECTED = "selected";
 
     // CrossRef columns
     public static final String COLUMN_FLASHCARD_ID = "flashcard_id";
@@ -64,6 +66,14 @@ public class FlashcardDatabaseHelper extends SQLiteOpenHelper {
                     "FOREIGN KEY(" + COLUMN_TOPIC_ID_REF + ") REFERENCES " + TABLE_TOPICS + "(" + COLUMN_TOPIC_ID + ")" +
                     ");";
 
+    private static final String CREATE_VIEW_FILTERED_FLASHCARDS =
+            "CREATE VIEW IF NOT EXISTS view_filtered_flashcards AS " +
+                    "SELECT flashcards.* " +
+                    "FROM flashcards " +
+                    "JOIN flashcard_topic_cross_ref ON flashcards.id = flashcard_topic_cross_ref.flashcard_id " +
+                    "JOIN topics ON flashcard_topic_cross_ref.topic_Id = topics.id " +
+                    "WHERE topics.selected = 1;";
+
     public FlashcardDatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -73,6 +83,7 @@ public class FlashcardDatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(TABLE_CREATE_FLASHCARDS);
         db.execSQL(TABLE_CREATE_TOPICS);
         db.execSQL(TABLE_CREATE_FLASHCARD_TOPIC_CROSS_REF);
+        db.execSQL(CREATE_VIEW_FILTERED_FLASHCARDS);
     }
 
     @Override
@@ -84,5 +95,13 @@ public class FlashcardDatabaseHelper extends SQLiteOpenHelper {
             db.execSQL(TABLE_CREATE_TOPICS);
             db.execSQL(TABLE_CREATE_FLASHCARD_TOPIC_CROSS_REF);
         }
+        if (oldVersion < 3){
+            db.execSQL("ALTER TABLE topics ADD COLUMN selected INTEGER DEFAULT 0");
+        }
+
+        db.execSQL("DROP VIEW IF EXISTS view_filtered_flashcards;");
+        db.execSQL(CREATE_VIEW_FILTERED_FLASHCARDS);
+
+
     }
 }

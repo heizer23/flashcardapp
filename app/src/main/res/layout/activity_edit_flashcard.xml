@@ -26,12 +26,40 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp" />
 
+    <!-- User Note Section with Full Width EditText and Below Button -->
     <EditText
         android:id="@+id/et_user_note"
         android:hint="User Note"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:minHeight="100dp"
+        android:maxLines="6" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
+
+        <!-- Get Context Button -->
+        <Button
+            android:id="@+id/btn_context"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Get Context" />
+
+        <!-- Copy Button -->
+        <Button
+            android:id="@+id/btn_copy"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Copy"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
 
     <EditText
         android:id="@+id/et_topics"
@@ -40,10 +68,27 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp" />
 
-    <Button
-        android:id="@+id/btn_update"
-        android:text="Update"
+    <!-- Bottom Button Row -->
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/btn_update"
+            android:text="Update"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/btn_generate_related_question"
+            android:text="Generate Question"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
 </LinearLayout>
+

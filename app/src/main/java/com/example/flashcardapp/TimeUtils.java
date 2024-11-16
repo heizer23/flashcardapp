@@ -12,6 +12,6 @@ public class TimeUtils {
         long minutes = seconds / 60;
         seconds %= 60;
 
-        return String.format("%02d-%02d:%02d:%02d", days, hours, minutes, seconds);
+        return String.format("%02d\n%02d:%02d:%02d", days, hours, minutes, seconds);
     }
 }

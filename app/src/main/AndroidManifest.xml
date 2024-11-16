@@ -30,6 +30,7 @@
         <activity android:name=".ReviewFlashcardsActivity" />
         <activity android:name=".EditFlashcardActivity" />
         <activity android:name=".ImportFlashcardsActivity" />
+        <activity android:name=".TopicSelectionActivity" />
         <activity android:name=".ChatGPTActivity" />
 
     </application>

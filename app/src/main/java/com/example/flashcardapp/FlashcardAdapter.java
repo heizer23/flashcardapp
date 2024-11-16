@@ -13,6 +13,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.example.flashcardapp.TimeUtils.formatTimeDifference;
+
 public class FlashcardAdapter extends RecyclerView.Adapter<FlashcardAdapter.ViewHolder> {
 
     private List<Flashcard> flashcards;
@@ -69,13 +71,7 @@ public class FlashcardAdapter extends RecyclerView.Adapter<FlashcardAdapter.View
         long timeDifferenceMillis = nextReviewTime - currentTime;
 
         long absTimeDifferenceMillis = Math.abs(timeDifferenceMillis);
-
-        long seconds = TimeUnit.MILLISECONDS.toSeconds(absTimeDifferenceMillis) % 60;
-        long minutes = TimeUnit.MILLISECONDS.toMinutes(absTimeDifferenceMillis) % 60;
-        long days = TimeUnit.MILLISECONDS.toDays(absTimeDifferenceMillis);
-
-        // Format the time difference as -12/03/00
-        String timeDifferenceText = String.format("%02d/%02d/%02d", seconds, minutes, days);
+        String timeDifferenceText = formatTimeDifference(absTimeDifferenceMillis);
 
         // Add a negative sign if the review is overdue
         if (timeDifferenceMillis < 0) {
@@ -84,15 +80,9 @@ public class FlashcardAdapter extends RecyclerView.Adapter<FlashcardAdapter.View
 
         long intervalValue = Math.abs(flashcard.getInterval()) * 1000L;  // Convert seconds to milliseconds
 
-        seconds = TimeUnit.MILLISECONDS.toSeconds(intervalValue) % 60;
-        minutes = TimeUnit.MILLISECONDS.toMinutes(intervalValue) % 60;
-        days = TimeUnit.MILLISECONDS.toDays(intervalValue);
-
-        String timeIntervalText = String.format("%02d/%02d/%02d", seconds, minutes, days);
-
         // Set the time difference and interval values
         holder.tvTimeDifference.setText(timeDifferenceText);
-        holder.tvInterval.setText(timeIntervalText);
+        holder.tvInterval.setText(formatTimeDifference(intervalValue));
     }
 
     @Override
