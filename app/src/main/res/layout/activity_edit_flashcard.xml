@@ -83,12 +83,22 @@
             android:layout_weight="1" />
 
         <Button
+            android:id="@+id/btn_delete"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Delete"
+            android:backgroundTint="@android:color/holo_red_dark"
+            android:textColor="@android:color/white"
+            android:layout_weight="1"/>
+
+
+        <Button
             android:id="@+id/btn_generate_related_question"
-            android:text="Generate Question"
+            android:text="Generate"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="8dp" />
+             />
     </LinearLayout>
 </LinearLayout>
 

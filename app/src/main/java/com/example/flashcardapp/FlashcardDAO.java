@@ -11,6 +11,9 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.flashcardapp.FlashcardDatabaseHelper.COLUMN_HISTORY_ANSWER_DURATION;
+import static com.example.flashcardapp.FlashcardDatabaseHelper.TABLE_REVIEW_HISTORY;
+
 public class FlashcardDAO {
     private SQLiteDatabase database;
     private FlashcardDatabaseHelper dbHelper;
@@ -249,6 +252,22 @@ public class FlashcardDAO {
         return flashcard;
     }
 
+    public void deleteFlashcard(int flashcardId) {
+        // Delete the flashcard from the flashcards table
+        database.delete(
+                FlashcardDatabaseHelper.TABLE_FLASHCARDS,
+                FlashcardDatabaseHelper.COLUMN_ID + " = ?",
+                new String[]{String.valueOf(flashcardId)}
+        );
+
+        // Optionally, clear the associated topics if any
+        database.delete(
+                FlashcardDatabaseHelper.TABLE_FLASHCARD_TOPIC_CROSS_REF,
+                FlashcardDatabaseHelper.COLUMN_FLASHCARD_ID + " = ?",
+                new String[]{String.valueOf(flashcardId)}
+        );
+    }
+
     // Get flashcards with next_review in the future (ascending)
     public List<Flashcard> getFutureFlashcards() {
         List<Flashcard> flashcards = new ArrayList<>();
@@ -305,6 +324,29 @@ public class FlashcardDAO {
 
         return new int[]{pastCount, futureCount}; // Return both counts as an array
     }
+
+
+    public void insertReviewHistory(
+            int questionId,
+            int confidenceLevel,
+            long timestamp,
+            long timeSinceLastSeen,
+            int interval,
+            String reviewType,
+            long answerDuration
+    ) {
+        ContentValues values = new ContentValues();
+        values.put(FlashcardDatabaseHelper.COLUMN_HISTORY_QUESTION_ID, questionId);
+        values.put(FlashcardDatabaseHelper.COLUMN_HISTORY_CONFIDENCE_LEVEL, confidenceLevel);
+        values.put(FlashcardDatabaseHelper.COLUMN_HISTORY_TIMESTAMP, timestamp);
+        values.put(FlashcardDatabaseHelper.COLUMN_HISTORY_TIME_SINCE_LAST_SEEN, timeSinceLastSeen);
+        values.put(FlashcardDatabaseHelper.COLUMN_HISTORY_INTERVAL, interval);
+        values.put(FlashcardDatabaseHelper.COLUMN_HISTORY_REVIEW_TYPE, reviewType);
+        values.put(FlashcardDatabaseHelper.COLUMN_HISTORY_ANSWER_DURATION, answerDuration);
+
+        database.insert(FlashcardDatabaseHelper.TABLE_REVIEW_HISTORY, null, values);
+    }
+
 
     // Get flashcards with next_review in the past (descending)
 

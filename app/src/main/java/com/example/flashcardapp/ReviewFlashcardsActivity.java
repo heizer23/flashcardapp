@@ -11,6 +11,8 @@ import android.widget.Toast;
 import java.util.HashSet;
 import java.util.Set;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class ReviewFlashcardsActivity extends AppCompatActivity {
@@ -25,6 +27,9 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
     private Button btnForgot, btnStruggling, btnUnsure, btnOkay, btnGood, btnPerfect;
     private FlashcardDAO flashcardDAO;
     private Flashcard currentFlashcard;
+
+    private long answerStartTime;
+
 
     private Set<Integer> seenFlashcards = new HashSet<>();
 
@@ -64,6 +69,10 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
             if (currentFlashcard != null) {
                 tvAnswer.setText(currentFlashcard.getAnswer());
                 tvAnswer.setVisibility(View.VISIBLE);
+                btnShowAnswer.setVisibility(View.GONE);
+
+                // Start the timer for tracking answer duration
+                answerStartTime = System.nanoTime();
 
                 // Show confidence buttons
                 findViewById(R.id.low_confidence_buttons).setVisibility(View.VISIBLE);
@@ -90,7 +99,7 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
             tvAnswer.setVisibility(View.GONE);
             findViewById(R.id.low_confidence_buttons).setVisibility(View.GONE);
             findViewById(R.id.high_confidence_buttons).setVisibility(View.GONE);
-
+            btnShowAnswer.setVisibility(View.VISIBLE);
 
 
             // Increment and update total question count
@@ -108,7 +117,20 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
     }
 
     private void handleConfidence(int quality) {
-        long previousReviewTime = currentFlashcard.getNextReview(); // Store the previous next_review time
+        long currentTime = System.currentTimeMillis();
+        long answerDuration = (System.nanoTime() - answerStartTime) / 1_000_000;
+        long previousReviewTime = currentFlashcard.getNextReview() - currentFlashcard.getInterval(); // Store the previous next_review time
+
+        flashcardDAO.insertReviewHistory(
+                currentFlashcard.getId(),
+                quality,
+                currentTime,
+                previousReviewTime,
+                (int) (currentFlashcard.getInterval()), // Interval in seconds
+                "normal", // Review type
+                answerDuration
+        );
+
 
         // Update the flashcard after review (this will modify nextReview time)
         updateFlashcardAfterReview(currentFlashcard, quality);
@@ -118,7 +140,7 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
 
         // Use the utility method to format the time difference and show a Toast
         String timeDifference = TimeUtils.formatTimeDifference(timePushed);
-        Toast.makeText(this, "Next review in: " + timeDifference, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Next: " + timeDifference, Toast.LENGTH_LONG).show();
 
         // Update counters based on the time moved and quality score
         if (timePushed > 24 * 60 * 60 * 1000L) { // More than one day
@@ -133,6 +155,9 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
 
         // Continue to the next flashcard or finish the session
         showNextFlashcard();
+
+
+
     }
 
     private void updateCounters() {
@@ -198,11 +223,23 @@ public class ReviewFlashcardsActivity extends AppCompatActivity {
         flashcardDAO.updateFlashcard(flashcard);
     }
 
+    private final ActivityResultLauncher<Intent> editFlashcardLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    // Reload the flashcard when returning with a successful result
+                    if (currentFlashcard != null) {
+                        currentFlashcard = flashcardDAO.getFlashcard(currentFlashcard.getId());
+                    }
+                }
+            }
+    );
+
     private void openEditQuestion() {
         if (currentFlashcard != null) {
             Intent intent = new Intent(this, EditFlashcardActivity.class);
             intent.putExtra("FLASHCARD_ID", currentFlashcard.getId()); // Pass the ID of the flashcard
-            startActivity(intent);
+            editFlashcardLauncher.launch(intent);
         }
     }
 

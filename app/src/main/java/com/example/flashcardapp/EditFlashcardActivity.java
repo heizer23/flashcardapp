@@ -17,7 +17,7 @@ import java.util.Map;
 public class EditFlashcardActivity extends AppCompatActivity {
 
     private EditText etQuestion, etAnswer, etSearchTerm, etUserNote, etTopics;
-    private Button btnUpdate, btnContext, btnRelatedQuestion;
+    private Button btnUpdate, btnContext, btnRelatedQuestion, btnCopy, btnDelete;
     private FlashcardDAO flashcardDAO;
     private Flashcard flashcard;
     private List<Topic> associatedTopics;
@@ -37,7 +37,8 @@ public class EditFlashcardActivity extends AppCompatActivity {
         etUserNote = findViewById(R.id.et_user_note);
         etTopics = findViewById(R.id.et_topics);
         btnUpdate = findViewById(R.id.btn_update);
-        Button btnCopy = findViewById(R.id.btn_copy);
+        btnDelete = findViewById(R.id.btn_delete);
+        btnCopy = findViewById(R.id.btn_copy);
         btnContext = findViewById(R.id.btn_context);
         btnRelatedQuestion = findViewById(R.id.btn_generate_related_question);
 
@@ -81,12 +82,21 @@ public class EditFlashcardActivity extends AppCompatActivity {
     private void setupButtonListeners() {
         btnUpdate.setOnClickListener(v -> updateFlashcard());
 
-        Button btnCopy = findViewById(R.id.btn_copy);
         btnCopy.setOnClickListener(v -> copyUserNoteToClipboard());
 
         btnContext.setOnClickListener(v -> generateContextForQuestion());
 
         btnRelatedQuestion.setOnClickListener(v -> generateRelatedQuestion());
+
+        btnDelete.setOnClickListener(v -> {
+            if (flashcard != null) {
+                flashcardDAO.deleteFlashcard(flashcard.getId()); // Call DAO method to delete
+                Toast.makeText(this, "Flashcard deleted.", Toast.LENGTH_SHORT).show();
+                finish(); // Close the activity and return to the previous screen
+            } else {
+                Toast.makeText(this, "No flashcard to delete.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateFlashcard() {
@@ -104,16 +114,19 @@ public class EditFlashcardActivity extends AppCompatActivity {
             flashcardDAO.updateFlashcard(flashcard);
 
             flashcardDAO.clearTopicsForFlashcard(flashcard.getId());
-            String[] topicArray = topics.split(",");
-            for (String topicName : topicArray) {
-                topicName = topicName.trim();
-                if (!topicName.isEmpty()) {
-                    Topic topic = getOrInsertTopicFromCache(topicName);
-                    flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId());
+            if (!topics.trim().isEmpty()) {
+                String[] topicArray = topics.split(",");
+                for (String topicName : topicArray) {
+                    topicName = topicName.trim();
+                    if (!topicName.isEmpty()) {
+                        Topic topic = getOrInsertTopicFromCache(topicName);
+                        flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId());
+                    }
                 }
             }
 
             Toast.makeText(this, "Flashcard updated!", Toast.LENGTH_SHORT).show();
+            setResult(RESULT_OK);
             finish();
         } else {
             Toast.makeText(this, "Please enter both question and answer.", Toast.LENGTH_SHORT).show();

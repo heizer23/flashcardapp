@@ -11,7 +11,7 @@ import java.io.IOException;
 public class ChatGPTHelper {
 
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
-    private static final String API_KEY = "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"; // Replace with your actual API key
+    private static final String API_KEY = "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"; // Replace with your actual API key
 
     private static final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
@@ -115,7 +115,11 @@ public class ChatGPTHelper {
 
     // Specific method for generating a related question
     public static void generateRelatedQuestion(String question, OnChatGPTResponse callback, Context context) {
-        String prompt = "Generate a new question related to: " + question;
+        String prompt = "Generate a related question for the following: \"" + question + "\". " +
+                "Provide the response in a JSON array with the following format: " +
+                "[{\"question\": \"<new question>\", \"answer\": \"<corresponding answer>\", \"searchTerm\": \"<related search term>\", " +
+                "\"userNote\": \"<a note about the question>\", \"topics\": [\"<topic1>\", \"<topic2>\"]}]. " +
+                "Ensure the JSON array contains only one question and is valid.";
         makeChatGPTRequest(prompt, new OnChatGPTResponse() {
             @Override
             public void onSuccess(String response) {
