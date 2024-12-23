@@ -7,11 +7,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.example.flashcardapp.data.Flashcard;
+
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.example.flashcardapp.TimeUtils.formatTimeDifference;
 

@@ -53,8 +53,10 @@ public class FlashcardDatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_CREATE_TOPICS =
             "CREATE TABLE " + TABLE_TOPICS + " (" +
                     COLUMN_TOPIC_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    COLUMN_TOPIC_NAME + " TEXT" +
+                    COLUMN_TOPIC_NAME + " TEXT, " +
+                    COLUMN_TOPIC_SELECTED + " INTEGER DEFAULT 0" + // Added the selected column
                     ");";
+
 
     // SQL statement to create the flashcard_topic_cross_ref table
     private static final String TABLE_CREATE_FLASHCARD_TOPIC_CROSS_REF =

@@ -1,5 +1,5 @@
 // File: Topic.java
-package com.example.flashcardapp;
+package com.example.flashcardapp.data;
 
 public class Topic {
     private int id;

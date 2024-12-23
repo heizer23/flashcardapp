@@ -3,6 +3,9 @@ package com.example.flashcardapp;
 
 import android.os.Bundle;
 import android.widget.Button;
+
+import com.example.flashcardapp.data.Topic;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;

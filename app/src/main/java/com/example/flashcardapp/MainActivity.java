@@ -8,7 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button btnAddFlashcard, btnReviewFlashcards, btnListFlashcards, btnImportExport;
+    private Button btnAddFlashcard, btnReviewFlashcards, btnListFlashcards, btnImportExport, btnCreate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
          btnReviewFlashcards = findViewById(R.id.btn_review_flashcards);
          btnListFlashcards = findViewById(R.id.btn_list_flashcards);
          btnImportExport = findViewById(R.id.btn_import_export);
+         btnCreate = findViewById(R.id.btn_create);
 
          btnAddFlashcard.setOnClickListener(v -> {
             // FlashcardDAO flashcardDAO = new FlashcardDAO(this);
@@ -47,5 +48,10 @@ public class MainActivity extends AppCompatActivity {
              Intent intent = new Intent(MainActivity.this, ImportFlashcardsActivity.class);
              startActivity(intent);
          });
+
+        btnCreate.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, GenerateQuestionsActivity.class);
+            startActivity(intent);
+        });
     }
 }

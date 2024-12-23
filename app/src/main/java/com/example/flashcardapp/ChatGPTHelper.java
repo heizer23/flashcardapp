@@ -11,7 +11,6 @@ import java.io.IOException;
 public class ChatGPTHelper {
 
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
-    private static final String API_KEY = "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"; // Replace with your actual API key
 
     private static final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
@@ -26,7 +25,7 @@ public class ChatGPTHelper {
     }
 
     // General ChatGPT Request Method
-    private static void makeChatGPTRequest(String prompt, OnChatGPTResponse callback) {
+    static void makeChatGPTRequest(String prompt, OnChatGPTResponse callback) {
         try {
             // Create JSON request body
             JSONObject jsonObject = new JSONObject();
@@ -72,6 +71,27 @@ public class ChatGPTHelper {
         } catch (Exception e) {
             callback.onFailure("Error constructing JSON payload: " + e.getMessage());
         }
+    }
+
+    public static void generateMultipleQuestions(String prompt, OnChatGPTResponse callback) {
+        makeChatGPTRequest(prompt, new OnChatGPTResponse() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    // Parse the response as an array of questions
+                    JSONArray jsonArray = new JSONArray(response);
+                    callback.onSuccess(jsonArray.toString());
+                } catch (Exception e) {
+                    callback.onFailure("Error parsing JSON response: " + e.getMessage());
+                    Log.e("ChatGPTHelper", "Error parsing JSON response", e);
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+                callback.onFailure(error);
+            }
+        });
     }
 
     // Specific method for getting context for a question

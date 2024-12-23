@@ -8,11 +8,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import com.example.flashcardapp.data.Flashcard;
+import com.example.flashcardapp.data.Topic;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.example.flashcardapp.FlashcardDatabaseHelper.COLUMN_HISTORY_ANSWER_DURATION;
-import static com.example.flashcardapp.FlashcardDatabaseHelper.TABLE_REVIEW_HISTORY;
 
 public class FlashcardDAO {
     private SQLiteDatabase database;
@@ -301,6 +301,31 @@ public class FlashcardDAO {
             } while (cursor.moveToNext());
         }
         cursor.close();
+
+        return flashcards;
+    }
+
+
+    public List<Flashcard> getAllFlashcards() {
+        List<Flashcard> flashcards = new ArrayList<>();
+
+        Cursor cursor = database.query(
+                FlashcardDatabaseHelper.TABLE_FLASHCARDS,
+                flashcardColumns, // The array of column names defined in the DAO
+                null, // No selection criteria
+                null, // No selection arguments
+                null, // No group by
+                null, // No having
+                FlashcardDatabaseHelper.COLUMN_NEXT_REVIEW + " ASC" // Order by next review
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                Flashcard flashcard = cursorToFlashcard(cursor); // Convert the cursor to a Flashcard object
+                flashcards.add(flashcard);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
 
         return flashcards;
     }

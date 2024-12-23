@@ -8,6 +8,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.flashcardapp.data.Flashcard;
+
 import java.util.HashSet;
 import java.util.Set;
 

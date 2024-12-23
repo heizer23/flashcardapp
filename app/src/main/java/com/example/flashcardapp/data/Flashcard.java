@@ -1,5 +1,7 @@
 // File: Flashcard.java
-package com.example.flashcardapp;
+package com.example.flashcardapp.data;
+
+import com.example.flashcardapp.data.Topic;
 
 import java.util.List;
 

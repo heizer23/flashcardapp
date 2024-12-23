@@ -1,0 +1,30 @@
+<!-- res/layout/activity_generate_questions.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Button to generate new questions -->
+    <Button
+        android:id="@+id/btn_generate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Generate Questions" />
+
+    <!-- RecyclerView to display generated questions -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_generated_questions"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="vertical" />
+
+    <!-- Button to save selected questions -->
+    <Button
+        android:id="@+id/btn_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save Selected Questions" />
+
+</LinearLayout>

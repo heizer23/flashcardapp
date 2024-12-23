@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.example.flashcardapp.data.Flashcard;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class AddFlashcardActivity extends AppCompatActivity {

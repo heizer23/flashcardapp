@@ -2,8 +2,9 @@
 package com.example.flashcardapp;
 
 import android.os.Bundle;
-import android.widget.ListView;
 import android.widget.ToggleButton;
+
+import com.example.flashcardapp.data.Flashcard;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;

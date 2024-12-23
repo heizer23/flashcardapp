@@ -14,6 +14,12 @@
         android:layout_height="wrap_content" />
 
     <Button
+        android:id="@+id/btn_create"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Create" />
+
+    <Button
         android:id="@+id/btn_review_flashcards"
         android:text="Review Flashcards"
         android:layout_width="match_parent"
