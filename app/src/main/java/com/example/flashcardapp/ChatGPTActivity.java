@@ -26,7 +26,7 @@ public class ChatGPTActivity extends AppCompatActivity {
 
     private EditText etPrompt, etTopic, etInformativeText;
     private Button btnAccept, btnBack;
-    private RecyclerView rvQuestions;
+    private RecyclerView rvGeneratedQuestions;
 
     private boolean buildMode = true; // Set to true for using local JSON, false for real GPT requests
 
@@ -41,9 +41,9 @@ public class ChatGPTActivity extends AppCompatActivity {
         etInformativeText = findViewById(R.id.et_informative_text);
         btnAccept = findViewById(R.id.btn_accept);
         btnBack = findViewById(R.id.btn_back);
-        rvQuestions = findViewById(R.id.rv_questions);
+        rvGeneratedQuestions = findViewById(R.id.rv_questions);
 
-        rvQuestions.setLayoutManager(new LinearLayoutManager(this));
+        rvGeneratedQuestions.setLayoutManager(new LinearLayoutManager(this));
 
         // Set initial view state
         btnBack.setVisibility(View.GONE);
@@ -114,11 +114,11 @@ public class ChatGPTActivity extends AppCompatActivity {
                 }
 
                 // Populate the RecyclerView
-                ChatGPTQuestionAdapter adapter = new ChatGPTQuestionAdapter(flashcards, flashcard -> {
-                    Toast.makeText(this, "Recreate clicked for: " + flashcard.getQuestion(), Toast.LENGTH_SHORT).show();
+                ChatGPTQuestionAdapter adapter = new ChatGPTQuestionAdapter(new ArrayList<>(), (flashcard, position) -> {
+                     Toast.makeText(this, "Recreate clicked at position: " + position, Toast.LENGTH_SHORT).show();
                 });
-                rvQuestions.setAdapter(adapter);
-                rvQuestions.setVisibility(View.VISIBLE);
+                rvGeneratedQuestions.setLayoutManager(new LinearLayoutManager(this));
+                rvGeneratedQuestions.setAdapter(adapter);
             }
         } catch (Exception e) {
             etInformativeText.setText("Error parsing response");

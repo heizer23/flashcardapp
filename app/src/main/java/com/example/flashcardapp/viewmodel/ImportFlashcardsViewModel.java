@@ -1,12 +1,10 @@
 package com.example.flashcardapp.viewmodel;
 
+
 import android.app.Application;
 import android.util.Log;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-
+import com.example.flashcardapp.ChatGPTHelper;
 import com.example.flashcardapp.FlashcardDAO;
 import com.example.flashcardapp.data.Flashcard;
 import com.example.flashcardapp.data.Topic;
@@ -19,10 +17,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
 public class ImportFlashcardsViewModel extends AndroidViewModel {
 
     private final FlashcardDAO flashcardDAO;
     private final Map<String, Topic> topicCache = new HashMap<>();
+    private final MutableLiveData<List<Flashcard>> generatedQuestions = new MutableLiveData<>(new ArrayList<>());
 
     public ImportFlashcardsViewModel(@NonNull Application application) {
         super(application);
@@ -38,68 +42,76 @@ public class ImportFlashcardsViewModel extends AndroidViewModel {
         }
     }
 
-    public List<Flashcard> parseFlashcardsFromJson(String jsonInput) {
-        List<Flashcard> flashcards = new ArrayList<>();
-
-        try {
-            JSONArray flashcardsArray = new JSONArray(jsonInput);
-
-            for (int i = 0; i < flashcardsArray.length(); i++) {
-                JSONObject flashcardJson = flashcardsArray.getJSONObject(i);
-                Flashcard flashcard = new Flashcard();
-
-                // Parse flashcard fields
-                flashcard.setQuestion(flashcardJson.optString("question"));
-                flashcard.setAnswer(flashcardJson.optString("answer"));
-                flashcard.setSearchTerm(flashcardJson.optString("searchTerm"));
-                flashcard.setUserNote(flashcardJson.optString("userNote"));
-
-                // Parse and cache topics
-                JSONArray topicsArray = flashcardJson.optJSONArray("topics");
-                if (topicsArray != null) {
-                    List<Topic> topics = new ArrayList<>();
-                    for (int j = 0; j < topicsArray.length(); j++) {
-                        String topicName = topicsArray.getString(j);
-                        topics.add(getOrInsertTopic(topicName));
-                    }
-                    flashcard.setTopics(topics);
-                }
-
-                flashcards.add(flashcard);  // Add the parsed flashcard
-            }
-
-        } catch (Exception e) {
-            Log.e("ImportFlashcards", "Error parsing JSON", e);
-            Toast.makeText(getApplication(), "Error parsing JSON", Toast.LENGTH_LONG).show();
-        }
-        return flashcards;
+    public LiveData<List<Flashcard>> getGeneratedQuestions() {
+        return generatedQuestions;
     }
 
-    private Topic getOrInsertTopic(String topicName) {
-        // Check if the topic is already in the cache
-        if (topicCache.containsKey(topicName)) {
-            return topicCache.get(topicName); // Return from cache if it exists
+    public void generateQuestions(List<Flashcard> existingQuestions, OnGenerateCallback callback) {
+        StringBuilder promptBuilder = new StringBuilder(
+                "Based on the following questions and answers, generate six new related questions. " +
+                        "Provide the response as a valid JSON array. Each object should have: " +
+                        "[{\"question\":\"<new question>\",\"answer\":\"<answer>\",\"searchTerm\":\"<term>\",\"userNote\":\"<note>\",\"topics\":[\"<topic>\"]}] " +
+                        "Here are the existing questions:"
+        );
+
+        for (Flashcard flashcard : existingQuestions) {
+            promptBuilder.append("Q: ").append(flashcard.getQuestion()).append("\n");
+            promptBuilder.append("A: ").append(flashcard.getAnswer()).append("\n");
         }
 
-        // If not in cache, check the database
-        Topic topic = flashcardDAO.getTopicByName(topicName);
-        if (topic == null) {
-            // If not in database, insert it
-            topic = flashcardDAO.insertTopic(topicName);
-        }
+        String prompt = promptBuilder.toString();
 
-        // Add the topic to the cache
-        topicCache.put(topicName, topic);
+        ChatGPTHelper.makeChatGPTRequest(prompt, new ChatGPTHelper.OnChatGPTResponse() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    JSONObject rootObject = new JSONObject(response);
+                    String content = rootObject.getJSONArray("choices")
+                            .getJSONObject(0)
+                            .getJSONObject("message")
+                            .getString("content");
 
-        return topic;
+                    JSONArray questionsArray = new JSONArray(content);
+                    List<Flashcard> newQuestions = new ArrayList<>();
+
+                    for (int i = 0; i < questionsArray.length(); i++) {
+                        JSONObject questionObj = questionsArray.getJSONObject(i);
+                        Flashcard flashcard = new Flashcard(
+                                questionObj.getString("question"),
+                                questionObj.getString("answer")
+                        );
+                        flashcard.setSearchTerm(questionObj.optString("searchTerm", ""));
+                        flashcard.setUserNote(questionObj.optString("userNote", ""));
+                        newQuestions.add(flashcard);
+                    }
+
+                    // Update LiveData on the main thread
+                    generatedQuestions.postValue(newQuestions);
+                    callback.onSuccess();
+
+                } catch (Exception e) {
+                    Log.e("GenerateQuestions", "Error parsing response", e);
+                    callback.onFailure("Failed to parse response.");
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+                callback.onFailure(error);
+            }
+        });
+    }
+
+    public List<Flashcard> fetchExistingQuestions() {
+        return flashcardDAO.getAllFlashcards(); // Assumes getAllFlashcards() fetches all flashcards from the database
     }
 
     public void saveFlashcards(List<Flashcard> flashcards) {
         for (Flashcard flashcard : flashcards) {
             if (flashcard.getQuestion() != null && flashcard.getAnswer() != null) {
-                flashcardDAO.createFlashcard(flashcard);
+                flashcardDAO.createFlashcard(flashcard); // Save the flashcard to the database
                 for (Topic topic : flashcard.getTopics()) {
-                    flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId());
+                    flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId()); // Associate flashcard with its topics
                 }
             }
         }
@@ -109,5 +121,10 @@ public class ImportFlashcardsViewModel extends AndroidViewModel {
     protected void onCleared() {
         flashcardDAO.close();
         super.onCleared();
+    }
+
+    public interface OnGenerateCallback {
+        void onSuccess();
+        void onFailure(String error);
     }
 }

@@ -25,7 +25,7 @@ public class ChatGPTHelper {
     }
 
     // General ChatGPT Request Method
-    static void makeChatGPTRequest(String prompt, OnChatGPTResponse callback) {
+    public static void makeChatGPTRequest(String prompt, OnChatGPTResponse callback) {
         try {
             // Create JSON request body
             JSONObject jsonObject = new JSONObject();
