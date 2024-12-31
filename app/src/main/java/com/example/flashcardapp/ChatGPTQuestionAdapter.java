@@ -43,16 +43,25 @@ public class ChatGPTQuestionAdapter extends RecyclerView.Adapter<ChatGPTQuestion
         holder.etQuestion.setText(flashcard.getQuestion());
         holder.etAnswer.setText(flashcard.getAnswer());
 
+        // Prevent triggering the listener during binding
         holder.cbSelect.setOnCheckedChangeListener(null);
-        holder.cbSelect.setChecked(false);
 
-        // Add listener to the itemView (or a button in the ViewHolder)
+        // Set the current checkbox state
+        holder.cbSelect.setChecked(selectionStates.get(position));
+
+        // Add a listener to update the selection state
+        holder.cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            selectionStates.set(position, isChecked); // Update selectionStates
+        });
+
+        // Optional: Add a listener for recreating a flashcard if needed
         holder.itemView.setOnClickListener(v -> {
             if (recreateClickListener != null) {
                 recreateClickListener.onRecreateClick(flashcard, position); // Pass both flashcard and position
             }
         });
     }
+
 
 
     @Override

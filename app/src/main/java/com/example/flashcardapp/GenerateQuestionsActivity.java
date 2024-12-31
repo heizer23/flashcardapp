@@ -36,7 +36,7 @@ public class GenerateQuestionsActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(ImportFlashcardsViewModel.class);
 
         // Setup RecyclerView
-        adapter = new ChatGPTQuestionAdapter(new ArrayList<>());
+        adapter = new ChatGPTQuestionAdapter(new ArrayList<>(), null); // Corrected line
         rvGeneratedQuestions.setLayoutManager(new LinearLayoutManager(this));
         rvGeneratedQuestions.setAdapter(adapter);
 

@@ -3,6 +3,7 @@ package com.example.flashcardapp;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -11,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.flashcardapp.data.Flashcard;
+import com.example.flashcardapp.util.FlashcardUtils;
 import com.example.flashcardapp.viewmodel.ImportFlashcardsViewModel;
 
 import java.util.List;
@@ -53,13 +55,23 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
         btnImport.setOnClickListener(v -> {
             String jsonInput = etJsonInput.getText().toString().trim();
             if (!jsonInput.isEmpty()) {
-                // Use ViewModel to parse and save flashcards
-                List<Flashcard> flashcards = viewModel.parseFlashcardsFromJson(jsonInput);
-                viewModel.saveFlashcards(flashcards);
+                try {
+                    // Parse flashcards using the utility method
+                    List<Flashcard> flashcards = FlashcardUtils.parseFlashcardsFromJson(jsonInput);
 
-                String message = "Imported " + flashcards.size() + " flashcards!";
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                    // Save flashcards using ViewModel
+                    viewModel.saveFlashcards(flashcards);
+
+                    // Show success message
+                    String message = "Imported " + flashcards.size() + " flashcards!";
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    // Handle JSON parsing errors
+                    Toast.makeText(this, "Invalid JSON input. Please check the format.", Toast.LENGTH_SHORT).show();
+                    Log.e("FlashcardImport", "Error parsing JSON input", e);
+                }
             } else {
+                // Handle empty input
                 Toast.makeText(this, "Please enter JSON input.", Toast.LENGTH_SHORT).show();
             }
         });

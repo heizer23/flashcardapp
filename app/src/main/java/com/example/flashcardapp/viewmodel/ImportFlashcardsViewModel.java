@@ -8,6 +8,7 @@ import com.example.flashcardapp.ChatGPTHelper;
 import com.example.flashcardapp.FlashcardDAO;
 import com.example.flashcardapp.data.Flashcard;
 import com.example.flashcardapp.data.Topic;
+import com.example.flashcardapp.util.FlashcardUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -71,19 +72,7 @@ public class ImportFlashcardsViewModel extends AndroidViewModel {
                             .getJSONObject("message")
                             .getString("content");
 
-                    JSONArray questionsArray = new JSONArray(content);
-                    List<Flashcard> newQuestions = new ArrayList<>();
-
-                    for (int i = 0; i < questionsArray.length(); i++) {
-                        JSONObject questionObj = questionsArray.getJSONObject(i);
-                        Flashcard flashcard = new Flashcard(
-                                questionObj.getString("question"),
-                                questionObj.getString("answer")
-                        );
-                        flashcard.setSearchTerm(questionObj.optString("searchTerm", ""));
-                        flashcard.setUserNote(questionObj.optString("userNote", ""));
-                        newQuestions.add(flashcard);
-                    }
+                    List<Flashcard> newQuestions = FlashcardUtils.parseFlashcardsFromJson(content);
 
                     // Update LiveData on the main thread
                     generatedQuestions.postValue(newQuestions);
@@ -102,6 +91,7 @@ public class ImportFlashcardsViewModel extends AndroidViewModel {
         });
     }
 
+
     public List<Flashcard> fetchExistingQuestions() {
         return flashcardDAO.getAllFlashcards(); // Assumes getAllFlashcards() fetches all flashcards from the database
     }
@@ -111,7 +101,17 @@ public class ImportFlashcardsViewModel extends AndroidViewModel {
             if (flashcard.getQuestion() != null && flashcard.getAnswer() != null) {
                 flashcardDAO.createFlashcard(flashcard); // Save the flashcard to the database
                 for (Topic topic : flashcard.getTopics()) {
-                    flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId()); // Associate flashcard with its topics
+                    Topic existingTopic = topicCache.get(topic.getName());
+                    if (existingTopic == null) {
+                        // Create new topic if it doesn't exist
+                        int topicId = flashcardDAO.insertTopic(topic.getName()).getId();
+                        topic.setId(topicId);
+                        topicCache.put(topic.getName(), topic); // Add to cache
+                    } else {
+                        topic.setId(existingTopic.getId()); // Use existing topic ID
+                    }
+                    // Associate flashcard with its topics
+                    flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId());
                 }
             }
         }
