@@ -11,7 +11,7 @@ import java.io.IOException;
 public class ChatGPTHelper {
 
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
-    private static final String API_KEY = "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";
+
 
 
     private static final OkHttpClient client = new OkHttpClient.Builder()
