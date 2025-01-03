@@ -1,7 +1,9 @@
 package com.example.flashcardapp.viewmodel;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
 
-import android.app.Application;
 import android.util.Log;
 
 import com.example.flashcardapp.ChatGPTHelper;
@@ -10,7 +12,6 @@ import com.example.flashcardapp.data.Flashcard;
 import com.example.flashcardapp.data.Topic;
 import com.example.flashcardapp.util.FlashcardUtils;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -18,51 +19,69 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+public class ImportFlashcardsViewModel extends ViewModel {
 
-public class ImportFlashcardsViewModel extends AndroidViewModel {
-
-    private final FlashcardDAO flashcardDAO;
     private final Map<String, Topic> topicCache = new HashMap<>();
     private final MutableLiveData<List<Flashcard>> generatedQuestions = new MutableLiveData<>(new ArrayList<>());
+    private FlashcardDAO flashcardDAO;
 
-    public ImportFlashcardsViewModel(@NonNull Application application) {
-        super(application);
-        flashcardDAO = new FlashcardDAO(application);
-        flashcardDAO.open();
+    // Initialize FlashcardDAO in ViewModel
+    public void initialize(FlashcardDAO dao) {
+        this.flashcardDAO = dao;
         preloadTopicCache();
     }
 
+    // Preload existing topics from the database into a cache
     private void preloadTopicCache() {
         List<Topic> existingTopics = flashcardDAO.getAllTopics();
         for (Topic topic : existingTopics) {
-            topicCache.put(topic.getName(), topic); // Preload the cache with all existing topics
+            topicCache.put(topic.getName(), topic); // Cache topics by name
         }
     }
 
+    // Getter for generated questions as LiveData
     public LiveData<List<Flashcard>> getGeneratedQuestions() {
         return generatedQuestions;
     }
 
-    public void generateQuestions(List<Flashcard> existingQuestions, OnGenerateCallback callback) {
-        StringBuilder promptBuilder = new StringBuilder(
-                "Based on the following questions and answers, generate six new related questions. " +
-                        "Provide the response as a valid JSON array. Each object should have: " +
-                        "[{\"question\":\"<new question>\",\"answer\":\"<answer>\",\"searchTerm\":\"<term>\",\"userNote\":\"<note>\",\"topics\":[\"<topic>\"]}] " +
-                        "Here are the existing questions:"
-        );
+    // Fetch existing flashcards from the database
+    public List<Flashcard> fetchExistingQuestions() {
+        return flashcardDAO.getAllFlashcards();
+    }
 
+    // Save flashcards into the database
+    public void saveFlashcards(List<Flashcard> flashcards) {
+        for (Flashcard flashcard : flashcards) {
+            if (flashcard.getQuestion() != null && flashcard.getAnswer() != null) {
+                flashcardDAO.createFlashcard(flashcard); // Save flashcard in database
+
+                // Handle topics
+                for (Topic topic : flashcard.getTopics()) {
+                    Topic existingTopic = topicCache.get(topic.getName());
+                    if (existingTopic == null) {
+                        // Add new topic if it doesn't exist
+                        int topicId = flashcardDAO.insertTopic(topic.getName()).getId();
+                        topic.setId(topicId);
+                        topicCache.put(topic.getName(), topic); // Update cache
+                    } else {
+                        topic.setId(existingTopic.getId()); // Use existing topic ID
+                    }
+                    // Associate flashcard with its topics
+                    flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId());
+                }
+            }
+        }
+    }
+
+    // Generate questions using ChatGPT based on existing questions and a given prompt
+    public void generateQuestions(List<Flashcard> existingQuestions, String prompt, OnGenerateCallback callback) {
+        StringBuilder promptBuilder = new StringBuilder(prompt + "\n\nExisting questions:");
         for (Flashcard flashcard : existingQuestions) {
-            promptBuilder.append("Q: ").append(flashcard.getQuestion()).append("\n");
-            promptBuilder.append("A: ").append(flashcard.getAnswer()).append("\n");
+            promptBuilder.append("\nQ: ").append(flashcard.getQuestion());
+            promptBuilder.append("\nA: ").append(flashcard.getAnswer());
         }
 
-        String prompt = promptBuilder.toString();
-
-        ChatGPTHelper.makeChatGPTRequest(prompt, new ChatGPTHelper.OnChatGPTResponse() {
+        ChatGPTHelper.makeChatGPTRequest(promptBuilder.toString(), new ChatGPTHelper.OnChatGPTResponse() {
             @Override
             public void onSuccess(String response) {
                 try {
@@ -73,11 +92,8 @@ public class ImportFlashcardsViewModel extends AndroidViewModel {
                             .getString("content");
 
                     List<Flashcard> newQuestions = FlashcardUtils.parseFlashcardsFromJson(content);
-
-                    // Update LiveData on the main thread
-                    generatedQuestions.postValue(newQuestions);
+                    generatedQuestions.postValue(newQuestions); // Update LiveData
                     callback.onSuccess();
-
                 } catch (Exception e) {
                     Log.e("GenerateQuestions", "Error parsing response", e);
                     callback.onFailure("Failed to parse response.");
@@ -91,40 +107,18 @@ public class ImportFlashcardsViewModel extends AndroidViewModel {
         });
     }
 
-
-    public List<Flashcard> fetchExistingQuestions() {
-        return flashcardDAO.getAllFlashcards(); // Assumes getAllFlashcards() fetches all flashcards from the database
-    }
-
-    public void saveFlashcards(List<Flashcard> flashcards) {
-        for (Flashcard flashcard : flashcards) {
-            if (flashcard.getQuestion() != null && flashcard.getAnswer() != null) {
-                flashcardDAO.createFlashcard(flashcard); // Save the flashcard to the database
-                for (Topic topic : flashcard.getTopics()) {
-                    Topic existingTopic = topicCache.get(topic.getName());
-                    if (existingTopic == null) {
-                        // Create new topic if it doesn't exist
-                        int topicId = flashcardDAO.insertTopic(topic.getName()).getId();
-                        topic.setId(topicId);
-                        topicCache.put(topic.getName(), topic); // Add to cache
-                    } else {
-                        topic.setId(existingTopic.getId()); // Use existing topic ID
-                    }
-                    // Associate flashcard with its topics
-                    flashcardDAO.associateFlashcardWithTopic(flashcard.getId(), topic.getId());
-                }
-            }
-        }
-    }
-
-    @Override
-    protected void onCleared() {
-        flashcardDAO.close();
-        super.onCleared();
-    }
-
+    // Interface for handling callbacks during question generation
     public interface OnGenerateCallback {
         void onSuccess();
         void onFailure(String error);
+    }
+
+    // Cleanup resources when ViewModel is cleared
+    @Override
+    protected void onCleared() {
+        if (flashcardDAO != null) {
+            flashcardDAO.close();
+        }
+        super.onCleared();
     }
 }

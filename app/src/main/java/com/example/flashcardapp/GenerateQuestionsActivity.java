@@ -35,6 +35,11 @@ public class GenerateQuestionsActivity extends AppCompatActivity {
         // Initialize ViewModel
         viewModel = new ViewModelProvider(this).get(ImportFlashcardsViewModel.class);
 
+        // Initialize DAO and pass it to ViewModel
+        FlashcardDAO flashcardDAO = new FlashcardDAO(this); // Use Activity context
+        flashcardDAO.open(); // Ensure the DAO is initialized
+        viewModel.initialize(flashcardDAO); // Pass the DAO to the ViewModel
+
         // Setup RecyclerView
         adapter = new ChatGPTQuestionAdapter(new ArrayList<>(), null); // Corrected line
         rvGeneratedQuestions.setLayoutManager(new LinearLayoutManager(this));
@@ -53,7 +58,9 @@ public class GenerateQuestionsActivity extends AppCompatActivity {
 
     private void generateQuestions() {
         List<Flashcard> existingQuestions = viewModel.fetchExistingQuestions();
-        viewModel.generateQuestions(existingQuestions, new ImportFlashcardsViewModel.OnGenerateCallback() {
+        String promptGenerateQuestions = getString(R.string.prompt_generate_questions_activity); // Retrieve prompt from strings.xml
+
+        viewModel.generateQuestions(existingQuestions, promptGenerateQuestions, new ImportFlashcardsViewModel.OnGenerateCallback() {
             @Override
             public void onSuccess() {
                 runOnUiThread(() -> {
@@ -68,6 +75,7 @@ public class GenerateQuestionsActivity extends AppCompatActivity {
             }
         });
     }
+
 
     private void saveQuestions() {
         List<Flashcard> selectedQuestions = adapter.getSelectedQuestions();

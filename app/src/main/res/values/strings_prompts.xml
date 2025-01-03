@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="prompt_generate_questions">
+        Provide a concise answer emphasizing the year, the event, and its connections to broader historical developments or trends.
+    </string>
+    <string name="prompt_example_existing_questions">
+        Provide the response as a valid JSON array. Each object should have:
+        [
+        {
+            \"question\": \"When was the Battle of Hastings and what was its significance in shaping the political landscape of England and Europe?\",
+            \"answer\": \"1066 marked the Norman conquest of England, linking England to continental Europe, influencing feudalism, and shaping the future of monarchy and law.\",
+            \"searchTerm\": \"Battle of Hastings significance\",
+            \"userNote\": \"Key event that reshaped English and European political dynamics.\",
+            \"topics\": [\"History\", \"England\", \"Middle Ages\"]
+        },
+        {
+            \"question\": \"When was the Magna Carta signed and how did it influence the relationship between monarchy and governance?\",
+            \"answer\": \"1215 marked the signing of the Magna Carta, limiting royal authority, inspiring constitutional developments, and reinforcing ideas of accountability.\",
+            \"searchTerm\": \"Magna Carta constitutional law\",
+            \"userNote\": \"Important for understanding the development of constitutional principles.\",
+            \"topics\": [\"History\", \"England\", \"Middle Ages\"]
+        },
+        {
+            \"question\": \"When did the fall of Constantinople occur and why is it regarded as a pivotal event in medieval history?\",
+            \"answer\": \"1453 marked the fall of Constantinople to the Ottomans, connecting the end of the Byzantine Empire to the rise of Ottoman dominance and the beginning of early modern trade shifts.\",
+            \"searchTerm\": \"Fall of Constantinople significance\",
+            \"userNote\": \"Critical for understanding the transition from medieval to early modern history.\",
+            \"topics\": [\"History\", \"Ottoman Empire\", \"Byzantine Empire\", \"Middle Ages\"]
+        }
+        ]
+    </string>
+    <string name="prompt_generate_questions_activity">
+    Based on the following questions and answers, generate six new related questions with new events that connect to one of the already existing questions. Ideally, the new questions should connect two of the already existing questions. Make all events historically important and relevant to the overall pool of questions.
+
+    Provide the response as a valid JSON array with the following structure:
+
+    [
+        {
+            \"question\": \"&lt;new question&gt;\",
+            \"answer\": \"&lt;answer&gt;\",
+            \"searchTerm\": \"&lt;term&gt;\",
+            \"userNote\": \"&lt;note&gt;\",
+            \"topics\": [\"&lt;topic&gt;\"]
+        }
+    ]
+</string>
+
+
+</resources>

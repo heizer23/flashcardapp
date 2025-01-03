@@ -37,19 +37,17 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
         // Initialize ViewModel
         viewModel = new ViewModelProvider(this).get(ImportFlashcardsViewModel.class);
 
-        // Prefill the EditText with example JSON flashcard entries
-        etJsonInput.setText(
-                "[{\"question\": \"What year was New Orleans founded?\"," +
-                        " \"answer\": \"1718\"," +
-                        " \"searchTerm\": \"New Orleans history\"," +
-                        " \"userNote\": \"This is relevant for Louisiana history.\"," +
-                        " \"topics\": [\"History\", \"Geography\"]}," +
-                        "{\"question\": \"Which genre of music is New Orleans considered the birthplace of?\"," +
-                        " \"answer\": \"Jazz\"," +
-                        " \"searchTerm\": \"New Orleans music\"," +
-                        " \"userNote\": \"This ties into the evolution of Jazz.\"," +
-                        " \"topics\": [\"Music\", \"History\"]}]"
-        );
+        // Retrieve prompts from XML resources
+        String promptGenerateQuestions = getString(R.string.prompt_generate_questions);
+        String promptExampleExistingQuestions = getString(R.string.prompt_example_existing_questions);
+
+        Log.d("Debug", "Prompt String: " + promptExampleExistingQuestions);
+        // Replace &quot; with actual quotation marks
+        promptExampleExistingQuestions = promptExampleExistingQuestions.replace("&quot;", "\"");
+
+        // Concatenate and set text to EditText
+        String prefilledText = promptGenerateQuestions + "\n\n" + promptExampleExistingQuestions;
+        etJsonInput.setText(prefilledText);
 
         // Import button listener
         btnImport.setOnClickListener(v -> {
@@ -92,4 +90,6 @@ public class ImportFlashcardsActivity extends AppCompatActivity {
         // Clear text button listener
         btnClearText.setOnClickListener(v -> etJsonInput.setText(""));
     }
+
+
 }

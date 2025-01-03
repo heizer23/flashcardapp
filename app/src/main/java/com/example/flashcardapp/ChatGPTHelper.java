@@ -12,6 +12,7 @@ public class ChatGPTHelper {
 
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
 
+    private static final String API_KEY = "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";
 
 
 
