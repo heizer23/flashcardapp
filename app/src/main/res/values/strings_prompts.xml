@@ -30,7 +30,7 @@
         ]
     </string>
     <string name="prompt_generate_questions_activity">
-    Based on the following questions and answers, generate six new related questions with new events that connect to one of the already existing questions. Ideally, the new questions should connect two of the already existing questions. Make all events historically important and relevant to the overall pool of questions.
+    Based on the following questions and answers, generate six new related questions with new events that connect to one of the already existing questions. Ideally, the new questions should connect two of the already existing questions. Make all events historically important and relevant to the overall pool of questions. It is important: Please make sure, that no dates mentioned in the question. Also do not hint too clearly at the answer. The answer should include a date where possible. The question should be one sentence and the answer around two sentences.
 
     Provide the response as a valid JSON array with the following structure:
 
