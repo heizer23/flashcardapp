@@ -70,7 +70,7 @@ public class ChatGPTActivity extends AppCompatActivity {
     private void handleRealSubmit() {
         String userInput = etPrompt.getText().toString().trim();
         if (!userInput.isEmpty()) {
-            ChatGPTHelper.getContextForQuestion(userInput, new ChatGPTHelper.OnChatGPTResponse() {
+            ChatGPTHelper.getContextForQuestion(userInput, this, new ChatGPTHelper.OnChatGPTResponse() {
                 @Override
                 public void onSuccess(String response) {
                     displayResponse(response);

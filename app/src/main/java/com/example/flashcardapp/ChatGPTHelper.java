@@ -2,18 +2,35 @@ package com.example.flashcardapp;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.util.Log;
 import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class ChatGPTHelper {
 
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
-    private static final String API_KEY = "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";
+    private static String API_KEY;
 
-
+    private static void initializeApiKey(Context context) {
+        if (API_KEY == null) {
+            try {
+                AssetManager assetManager = context.getAssets();
+                InputStream inputStream = assetManager.open("config.properties");
+                Properties properties = new Properties();
+                properties.load(inputStream);
+                API_KEY = properties.getProperty("API_KEY");
+            } catch (IOException e) {
+                Log.e("ChatGPTHelper", "Error loading API key: " + e.getMessage());
+            }
+        }
+    }
 
     private static final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
@@ -29,11 +46,14 @@ public class ChatGPTHelper {
     }
 
     // General ChatGPT Request Method
-    public static void makeChatGPTRequest(String prompt, OnChatGPTResponse callback) {
+    public static void makeChatGPTRequest(String prompt, OnChatGPTResponse callback, Context context) {
+
+        initializeApiKey(context);
+
         try {
             // Create JSON request body
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("model", "gpt-3.5-turbo");
+            jsonObject.put("model", "gpt-4-turbo");
 
             JSONArray messagesArray = new JSONArray();
             JSONObject messageObject = new JSONObject();
@@ -77,7 +97,8 @@ public class ChatGPTHelper {
         }
     }
 
-    public static void generateMultipleQuestions(String prompt, OnChatGPTResponse callback) {
+    public static void generateMultipleQuestions(String prompt, Context context, OnChatGPTResponse callback) {
+
         makeChatGPTRequest(prompt, new OnChatGPTResponse() {
             @Override
             public void onSuccess(String response) {
@@ -95,11 +116,11 @@ public class ChatGPTHelper {
             public void onFailure(String error) {
                 callback.onFailure(error);
             }
-        });
+        }, context);
     }
 
     // Specific method for getting context for a question
-    public static void getContextForQuestion(String question, OnChatGPTResponse callback) {
+    public static void getContextForQuestion(String question,Context context,  OnChatGPTResponse callback) {
         String prompt = "Explain why this was important, starting with the most significant reason. Write a 150-word answer with the most important reason in the first sentence, followed by a new line after that sentence. Important: Do NOT repeat details from the question or the answer! Include one additional relevant fact in the explanation.  " + question;
         makeChatGPTRequest(prompt, new OnChatGPTResponse() {
             @Override
@@ -127,15 +148,11 @@ public class ChatGPTHelper {
             public void onFailure(String error) {
                 callback.onFailure(error);
             }
-        });
+        },context);
     }
 
 
-    // Specific method for rephrasing a question
-    public static void rephraseQuestion(String question, OnChatGPTResponse callback) {
-        String prompt = "Rephrase the question: " + question;
-        makeChatGPTRequest(prompt, callback);
-    }
+
 
     // Specific method for generating a related question
     public static void generateRelatedQuestion(String question, OnChatGPTResponse callback, Context context) {
@@ -156,7 +173,7 @@ public class ChatGPTHelper {
             public void onFailure(String error) {
                 callback.onFailure(error);
             }
-        });
+        }, context);
     }
 
 }

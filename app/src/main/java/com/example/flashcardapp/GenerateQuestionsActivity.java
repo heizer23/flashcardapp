@@ -60,7 +60,7 @@ public class GenerateQuestionsActivity extends AppCompatActivity {
         List<Flashcard> existingQuestions = viewModel.fetchExistingQuestions();
         String promptGenerateQuestions = getString(R.string.prompt_generate_questions_activity); // Retrieve prompt from strings.xml
 
-        viewModel.generateQuestions(existingQuestions, promptGenerateQuestions, new ImportFlashcardsViewModel.OnGenerateCallback() {
+        viewModel.generateQuestions(existingQuestions, promptGenerateQuestions, this,  new ImportFlashcardsViewModel.OnGenerateCallback() {
             @Override
             public void onSuccess() {
                 runOnUiThread(() -> {

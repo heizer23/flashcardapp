@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.example.flashcardapp.ChatGPTHelper;
@@ -74,7 +75,7 @@ public class ImportFlashcardsViewModel extends ViewModel {
     }
 
     // Generate questions using ChatGPT based on existing questions and a given prompt
-    public void generateQuestions(List<Flashcard> existingQuestions, String prompt, OnGenerateCallback callback) {
+    public void generateQuestions(List<Flashcard> existingQuestions, String prompt, Context context, OnGenerateCallback callback) {
         StringBuilder promptBuilder = new StringBuilder(prompt + "\n\nExisting questions:");
         for (Flashcard flashcard : existingQuestions) {
             promptBuilder.append("\nQ: ").append(flashcard.getQuestion());
@@ -104,7 +105,7 @@ public class ImportFlashcardsViewModel extends ViewModel {
             public void onFailure(String error) {
                 callback.onFailure(error);
             }
-        });
+        }, context);
     }
 
     // Interface for handling callbacks during question generation

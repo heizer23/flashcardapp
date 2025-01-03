@@ -155,7 +155,7 @@ public class EditFlashcardActivity extends AppCompatActivity {
                 etSearchTerm.getText().toString().trim() + "\".";
 
         if (!question.isEmpty()) {
-            ChatGPTHelper.getContextForQuestion(question, new ChatGPTHelper.OnChatGPTResponse() {
+            ChatGPTHelper.getContextForQuestion(question, this , new ChatGPTHelper.OnChatGPTResponse() {
                 @Override
                 public void onSuccess(String response) {
                     runOnUiThread(() -> etUserNote.setText(response));
