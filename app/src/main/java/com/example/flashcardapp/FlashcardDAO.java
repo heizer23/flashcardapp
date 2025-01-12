@@ -310,7 +310,7 @@ public class FlashcardDAO {
         List<Flashcard> flashcards = new ArrayList<>();
 
         Cursor cursor = database.query(
-                FlashcardDatabaseHelper.TABLE_FLASHCARDS,
+                "view_filtered_flashcards",
                 flashcardColumns, // The array of column names defined in the DAO
                 null, // No selection criteria
                 null, // No selection arguments
