@@ -51,6 +51,7 @@ public class ImportFlashcardsViewModel extends ViewModel {
     }
 
     // Save flashcards into the database
+
     public void saveFlashcards(List<Flashcard> flashcards) {
         for (Flashcard flashcard : flashcards) {
             if (flashcard.getQuestion() != null && flashcard.getAnswer() != null) {

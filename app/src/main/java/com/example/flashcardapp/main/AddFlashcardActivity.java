@@ -37,7 +37,7 @@ public class AddFlashcardActivity extends AppCompatActivity {
 
             if (!question.isEmpty() && !answer.isEmpty()) {
                 Flashcard flashcard = new Flashcard(
-                        0, question, answer, 2.5, 0, 1, System.currentTimeMillis(), "", "", new ArrayList<>()
+                        0, question, answer, 2.5, 0, 1, System.currentTimeMillis(), "", ""
                 );
                 flashcardDAO.createFlashcard(flashcard);
                 Toast.makeText(this, "Flashcard saved!", Toast.LENGTH_SHORT).show();

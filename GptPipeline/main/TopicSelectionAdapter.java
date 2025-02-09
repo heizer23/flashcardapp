@@ -32,7 +32,7 @@ public class TopicSelectionAdapter extends RecyclerView.Adapter<TopicSelectionAd
     public void onBindViewHolder(@NonNull TopicViewHolder holder, int position) {
         Topic topic = topics.get(position);
         holder.cbTopic.setText(topic.getName());
-        holder.cbTopic.setChecked(topic.isSelected());
+        holder.cbTopic.setChecked(topic.getSelected() );
 
         // Update selection state on checkbox change
         holder.cbTopic.setOnCheckedChangeListener((buttonView, isChecked) -> topic.setSelected(isChecked));

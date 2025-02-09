@@ -16,6 +16,8 @@ public class FlashcardUtils {
         try {
             JSONArray questionsArray = new JSONArray(jsonString);
 
+            int length = questionsArray.length();
+
             for (int i = 0; i < questionsArray.length(); i++) {
                 JSONObject questionObj = questionsArray.getJSONObject(i);
                 Flashcard flashcard = new Flashcard(
@@ -33,7 +35,8 @@ public class FlashcardUtils {
                         String topicName = topicsArray.getString(j);
                         topics.add(new Topic(topicName)); // Create new Topic objects with names
                     }
-                    flashcard.setTopics(topics);
+                    //todo get this to work again
+                 //   flashcard.setTopics(topics);
                 }
 
                 flashcards.add(flashcard);

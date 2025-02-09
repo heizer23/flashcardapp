@@ -45,7 +45,7 @@ public class TopicSelectionActivity extends AppCompatActivity {
 
     private void saveSelectedTopicsToDatabase(List<Topic> topics) {
         for (Topic topic : topics) {
-            flashcardDAO.updateTopicSelection(topic.getId(), topic.isSelected());
+            flashcardDAO.updateTopicSelection(topic.getId(), topic.getSelected() );
         }
     }
 
