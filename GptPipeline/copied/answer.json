@@ -1,0 +1,19 @@
+{
+  "explanation": {
+    "summary": "To allow Kotlin code to reassign IDs and match the original Java usage (e.g. `flashcard.id = ...` or `topic.id = ...`), change the `id` fields from `val` to `var`. Also, add secondary constructors for cases where you do `new Topic(topicName)` or `new Flashcard(question, answer)` in Java. This way you won't get \"Val cannot be reassigned\" errors, and you preserve the existing behavior without breaking code that expects to call these constructors."
+  },
+  "code_changes": {
+    "com.example.flashcardapp.data": {
+      "Flashcard": {
+        "changes": "update",
+        "file_path": "C:\\Users\\Linse\\Documents\\Programmieren\\flashcardapp\\app\\src\\main\\java\\com\\example\\flashcardapp\\data\\Flashcard.kt",
+        "content": "package com.example.flashcardapp.data\n\nimport androidx.room.Entity\nimport androidx.room.PrimaryKey\n\n@Entity(tableName = \"flashcards\")\ndata class Flashcard(\n    @PrimaryKey(autoGenerate = true) var id: Int = 0,\n    var question: String = \"\",\n    var answer: String = \"\",\n    var easinessFactor: Double = 2.5,\n    var repetition: Int = 0,\n    var interval: Int = 1,\n    var nextReview: Long = System.currentTimeMillis(),\n    var searchTerm: String = \"\",\n    var userNote: String = \"\",\n    var topics: List<Topic> = emptyList()\n) {\n    // Secondary constructor to support usage like new Flashcard(question, answer)\n    constructor(question: String, answer: String) : this(\n        0, question, answer, 2.5, 0, 1, System.currentTimeMillis(), \"\", \"\", emptyList()\n    )\n}"
+      },
+      "Topic": {
+        "changes": "update",
+        "file_path": "C:\\Users\\Linse\\Documents\\Programmieren\\flashcardapp\\app\\src\\main\\java\\com\\example\\flashcardapp\\data\\Topic.kt",
+        "content": "package com.example.flashcardapp.data\n\nimport androidx.room.Entity\nimport androidx.room.PrimaryKey\n\n@Entity(tableName = \"topics\")\ndata class Topic(\n    @PrimaryKey(autoGenerate = true) var id: Int = 0,\n    var name: String = \"\",\n    var selected: Boolean = false\n) {\n    // Secondary constructor to support usage like new Topic(topicName)\n    constructor(name: String) : this(0, name, false)\n}"
+      }
+    }
+  }
+}
