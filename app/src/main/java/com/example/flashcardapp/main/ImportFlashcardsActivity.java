@@ -1,4 +1,4 @@
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.flashcardapp.R;
 import com.example.flashcardapp.data.Flashcard;
 import com.example.flashcardapp.util.FlashcardUtils;
 import com.example.flashcardapp.viewmodel.ImportFlashcardsViewModel;

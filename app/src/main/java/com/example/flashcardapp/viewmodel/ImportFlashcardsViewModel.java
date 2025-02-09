@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModel;
 import android.content.Context;
 import android.util.Log;
 
-import com.example.flashcardapp.ChatGPTHelper;
-import com.example.flashcardapp.FlashcardDAO;
+import com.example.flashcardapp.main.ChatGPTHelper;
+import com.example.flashcardapp.main.FlashcardDAO;
 import com.example.flashcardapp.data.Flashcard;
 import com.example.flashcardapp.data.Topic;
 import com.example.flashcardapp.util.FlashcardUtils;

@@ -1,4 +1,4 @@
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.content.Context;
 import android.content.Intent;
@@ -8,7 +8,6 @@ import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;

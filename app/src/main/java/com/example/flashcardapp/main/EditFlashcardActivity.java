@@ -1,4 +1,4 @@
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.flashcardapp.R;
 import com.example.flashcardapp.data.Flashcard;
 import com.example.flashcardapp.data.Topic;
 

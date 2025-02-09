@@ -1,5 +1,5 @@
 // File: FlashcardDatabaseHelper.java
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

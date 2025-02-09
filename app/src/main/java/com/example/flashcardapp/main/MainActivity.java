@@ -1,9 +1,12 @@
 // File: MainActivity.java
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+
+import com.example.flashcardapp.R;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {

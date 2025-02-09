@@ -1,9 +1,10 @@
 // File: TopicSelectionActivity.java
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.os.Bundle;
 import android.widget.Button;
 
+import com.example.flashcardapp.R;
 import com.example.flashcardapp.data.Topic;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,7 +45,7 @@ public class TopicSelectionActivity extends AppCompatActivity {
 
     private void saveSelectedTopicsToDatabase(List<Topic> topics) {
         for (Topic topic : topics) {
-            flashcardDAO.updateTopicSelection(topic.getId(), topic.isSelected());
+            flashcardDAO.updateTopicSelection(topic.getId(), topic.getSelected() );
         }
     }
 

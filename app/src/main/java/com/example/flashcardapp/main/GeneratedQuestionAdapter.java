@@ -1,4 +1,4 @@
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
+import com.example.flashcardapp.R;
 import com.example.flashcardapp.data.Flashcard;
 
 import androidx.annotation.NonNull;

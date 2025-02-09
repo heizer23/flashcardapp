@@ -1,4 +1,4 @@
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.os.Bundle;
 import android.widget.Button;
@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.flashcardapp.R;
 import com.example.flashcardapp.data.Flashcard;
 import com.example.flashcardapp.viewmodel.ImportFlashcardsViewModel;
 

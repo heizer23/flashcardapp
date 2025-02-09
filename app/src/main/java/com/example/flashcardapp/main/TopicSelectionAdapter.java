@@ -1,11 +1,12 @@
 // File: TopicSelectionAdapter.java
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 
+import com.example.flashcardapp.R;
 import com.example.flashcardapp.data.Topic;
 
 import androidx.annotation.NonNull;
@@ -31,7 +32,7 @@ public class TopicSelectionAdapter extends RecyclerView.Adapter<TopicSelectionAd
     public void onBindViewHolder(@NonNull TopicViewHolder holder, int position) {
         Topic topic = topics.get(position);
         holder.cbTopic.setText(topic.getName());
-        holder.cbTopic.setChecked(topic.isSelected());
+        holder.cbTopic.setChecked(topic.getSelected() );
 
         // Update selection state on checkbox change
         holder.cbTopic.setOnCheckedChangeListener((buttonView, isChecked) -> topic.setSelected(isChecked));

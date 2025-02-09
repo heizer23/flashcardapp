@@ -1,5 +1,5 @@
 // File: ReviewFlashcardsActivity.java
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.flashcardapp.R;
 import com.example.flashcardapp.data.Flashcard;
 
 import java.util.HashSet;

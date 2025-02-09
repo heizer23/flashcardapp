@@ -16,7 +16,7 @@
 
         <!-- Main Activity -->
         <activity
-            android:name=".MainActivity"
+            android:name=".main.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,14 +25,14 @@
         </activity>
 
         <!-- Other Activities -->
-        <activity android:name=".AddFlashcardActivity" />
-        <activity android:name=".ListFlashcardsActivity" />
-        <activity android:name=".ReviewFlashcardsActivity" />
-        <activity android:name=".EditFlashcardActivity" />
-        <activity android:name=".ImportFlashcardsActivity" />
-        <activity android:name=".TopicSelectionActivity" />
-        <activity android:name=".ChatGPTActivity" />
-        <activity android:name=".GenerateQuestionsActivity" />
+        <activity android:name=".main.AddFlashcardActivity" />
+        <activity android:name=".main.ListFlashcardsActivity" />
+        <activity android:name=".main.ReviewFlashcardsActivity" />
+        <activity android:name=".main.EditFlashcardActivity" />
+        <activity android:name=".main.ImportFlashcardsActivity" />
+        <activity android:name=".main.TopicSelectionActivity" />
+        <activity android:name=".main.ChatGPTActivity" />
+        <activity android:name=".main.GenerateQuestionsActivity" />
 
     </application>
 </manifest>

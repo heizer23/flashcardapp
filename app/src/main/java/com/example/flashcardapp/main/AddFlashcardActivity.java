@@ -1,12 +1,15 @@
 // File: AddFlashcardActivity.java
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.flashcardapp.R;
 import com.example.flashcardapp.data.Flashcard;
+
+import java.util.ArrayList;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -33,7 +36,9 @@ public class AddFlashcardActivity extends AppCompatActivity {
             String answer = etAnswer.getText().toString().trim();
 
             if (!question.isEmpty() && !answer.isEmpty()) {
-                Flashcard flashcard = new Flashcard(question, answer);
+                Flashcard flashcard = new Flashcard(
+                        0, question, answer, 2.5, 0, 1, System.currentTimeMillis(), "", "", new ArrayList<>()
+                );
                 flashcardDAO.createFlashcard(flashcard);
                 Toast.makeText(this, "Flashcard saved!", Toast.LENGTH_SHORT).show();
                 finish();

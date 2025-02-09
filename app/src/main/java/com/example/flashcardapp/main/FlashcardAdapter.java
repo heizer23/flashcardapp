@@ -1,5 +1,5 @@
 // File: FlashcardAdapter.java
-package com.example.flashcardapp;
+package com.example.flashcardapp.main;
 
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.flashcardapp.R;
 import com.example.flashcardapp.data.Flashcard;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,7 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static com.example.flashcardapp.TimeUtils.formatTimeDifference;
+import static com.example.flashcardapp.main.TimeUtils.formatTimeDifference;
 
 public class FlashcardAdapter extends RecyclerView.Adapter<FlashcardAdapter.ViewHolder> {
 
