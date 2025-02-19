@@ -25,17 +25,14 @@ public class MainActivity extends AppCompatActivity {
          btnCreate = findViewById(R.id.btn_create);
 
          btnAddFlashcard.setOnClickListener(v -> {
-            // FlashcardDAO flashcardDAO = new FlashcardDAO(this);
-            // flashcardDAO.open();
-            // flashcardDAO.deleteAllData();
-
-           //  Intent intent = new Intent(MainActivity.this, AddFlashcardActivity.class);
              Intent intent = new Intent(MainActivity.this, TopicSelectionActivity.class);
               startActivity(intent);
          });
 
-
-
+        btnCreate.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, AddFlashcardActivity.class);
+            startActivity(intent);
+        });
 
          btnReviewFlashcards.setOnClickListener(v -> {
              Intent intent = new Intent(MainActivity.this, ReviewFlashcardsActivity.class);
@@ -52,9 +49,6 @@ public class MainActivity extends AppCompatActivity {
              startActivity(intent);
          });
 
-        btnCreate.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, GenerateQuestionsActivity.class);
-            startActivity(intent);
-        });
+
     }
 }

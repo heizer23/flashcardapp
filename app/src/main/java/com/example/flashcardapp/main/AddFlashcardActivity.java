@@ -7,17 +7,22 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.flashcardapp.R;
-import com.example.flashcardapp.data.Flashcard;
-
-import java.util.ArrayList;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.example.flashcardapp.viewmodel.AddFlashcardViewModel;
 
 public class AddFlashcardActivity extends AppCompatActivity {
 
     private EditText etQuestion, etAnswer;
     private Button btnSave;
-    private FlashcardDAO flashcardDAO;
+
+    // Removed direct FlashcardDAO field
+    // private FlashcardDAO flashcardDAO;
+
+    // New: reference our ViewModel
+    private AddFlashcardViewModel addFlashcardViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,20 +33,29 @@ public class AddFlashcardActivity extends AppCompatActivity {
         etAnswer = findViewById(R.id.et_answer);
         btnSave = findViewById(R.id.btn_save);
 
-        flashcardDAO = new FlashcardDAO(this);
-        flashcardDAO.open();
+        // Removed old DAO init:
+        // flashcardDAO = new FlashcardDAO(this);
+        // flashcardDAO.open();
+
+        // Now we set up the ViewModel
+        addFlashcardViewModel = new ViewModelProvider(this).get(AddFlashcardViewModel.class);
+        addFlashcardViewModel.initialize(new FlashcardDAO(this));
+
+        // Observe saveComplete to react when insert is finished
+        addFlashcardViewModel.getSaveComplete().observe(this, isComplete -> {
+            if (isComplete != null && isComplete) {
+                Toast.makeText(this, "Flashcard saved!", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        });
 
         btnSave.setOnClickListener(v -> {
             String question = etQuestion.getText().toString().trim();
             String answer = etAnswer.getText().toString().trim();
 
             if (!question.isEmpty() && !answer.isEmpty()) {
-                Flashcard flashcard = new Flashcard(
-                        0, question, answer, 2.5, 0, 1, System.currentTimeMillis(), "", ""
-                );
-                flashcardDAO.createFlashcard(flashcard);
-                Toast.makeText(this, "Flashcard saved!", Toast.LENGTH_SHORT).show();
-                finish();
+                // Delegate to ViewModel
+                addFlashcardViewModel.saveFlashcard(question, answer);
             } else {
                 Toast.makeText(this, "Please enter both question and answer.", Toast.LENGTH_SHORT).show();
             }
@@ -50,7 +64,8 @@ public class AddFlashcardActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        flashcardDAO.close();
+        // Removed old close call:
+        // flashcardDAO.close();
         super.onDestroy();
     }
 }

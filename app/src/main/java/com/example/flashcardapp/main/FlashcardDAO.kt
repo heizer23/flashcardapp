@@ -3,8 +3,6 @@ package com.example.flashcardapp.main
 import android.content.Context
 import android.util.Log
 import com.example.flashcardapp.data.*
-
-// Coroutines imports:
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -47,8 +45,11 @@ class FlashcardDAO(context: Context) {
         roomDao.updateFlashcard(flashcard)
     }
 
-    fun clearTopicsForFlashcard(flashcardId: Int) {
-        Log.d("FlashcardDAO", "clearTopicsForFlashcard not implemented in new Room DAO.")
+    // Now we implement clearing old cross-references.
+    fun clearTopicsForFlashcard(flashcardId: Int) { // changes: update
+        Log.d("FlashcardDAO", "Clearing topics for flashcardId=$flashcardId")
+        // Here we do an actual delete in the DB
+        roomDao.deleteCrossRefsForFlashcard(flashcardId)
     }
 
     fun insertTopic(topicName: String): Topic {
@@ -72,9 +73,9 @@ class FlashcardDAO(context: Context) {
         )
     }
 
-    fun getTopicsForFlashcard(flashcardId: Int): List<Topic> {
-        Log.d("FlashcardDAO", "getTopicsForFlashcard not implemented with Room relations.")
-        return emptyList()
+    // Now we implement getTopicsForFlashcard by joining
+    fun getTopicsForFlashcard(flashcardId: Int): List<Topic> { // changes: update
+        return roomDao.getTopicsForFlashcard(flashcardId)
     }
 
     fun getAllTopics(): List<Topic> {
@@ -87,16 +88,18 @@ class FlashcardDAO(context: Context) {
 
     fun deleteFlashcard(flashcardId: Int) {
         val flashcard = roomDao.getFlashcardById(flashcardId)
-        if (flashcard != null) {
-            roomDao.deleteFlashcard(flashcard)
+        flashcard?.let {
+            roomDao.deleteFlashcard(it)
         }
     }
 
     fun getFutureFlashcards(): List<Flashcard> {
+        // Synchronous version (kept for reference)
         return roomDao.getFutureFlashcards(System.currentTimeMillis())
     }
 
     fun getPastFlashcards(): List<Flashcard> {
+        // Synchronous version (kept for reference)
         return roomDao.getPastFlashcards(System.currentTimeMillis())
     }
 
@@ -120,19 +123,12 @@ class FlashcardDAO(context: Context) {
         reviewType: String,
         answerDuration: Long
     ) {
-        // Not implemented in the new Room DAO. You'd add an entity for review_history.
         Log.d("FlashcardDAO", "insertReviewHistory not fully implemented.")
     }
 
-    // -----------------------------------------------------------------
-    // Below are the new coroutine-based async methods for DB operations
-    // -----------------------------------------------------------------
+    // Async methods below...
 
-    /**
-     * Launches a coroutine on Dispatchers.IO to fetch the next due flashcard.
-     * Result is returned on Dispatchers.Main.
-     */
-    fun getNextDueFlashcardAsync(currentTime: Long, onResult: (Flashcard?) -> Unit) { // changes: create
+    fun getNextDueFlashcardAsync(currentTime: Long, onResult: (Flashcard?) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             val result = getNextDueFlashcard(currentTime)
             withContext(Dispatchers.Main) {
@@ -141,11 +137,7 @@ class FlashcardDAO(context: Context) {
         }
     }
 
-    /**
-     * Launches a coroutine on Dispatchers.IO to update a flashcard.
-     * Calls onComplete() on Dispatchers.Main when done.
-     */
-    fun updateFlashcardAsync(flashcard: Flashcard, onComplete: () -> Unit = {}) { // changes: create
+    fun updateFlashcardAsync(flashcard: Flashcard, onComplete: () -> Unit = {}) {
         CoroutineScope(Dispatchers.IO).launch {
             updateFlashcard(flashcard)
             withContext(Dispatchers.Main) {
@@ -154,15 +146,29 @@ class FlashcardDAO(context: Context) {
         }
     }
 
-    /**
-     * Launches a coroutine on Dispatchers.IO to fetch the count of past and future questions.
-     * Result is returned on Dispatchers.Main.
-     */
-    fun getPastAndFutureQuestionsCountAsync(onResult: (IntArray) -> Unit) { // changes: create
+    fun getPastAndFutureQuestionsCountAsync(onResult: (IntArray) -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             val counts = getPastAndFutureQuestionsCount()
             withContext(Dispatchers.Main) {
                 onResult(counts)
+            }
+        }
+    }
+
+    fun getFutureFlashcardsAsync(onResult: (List<Flashcard>) -> Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val list = getFutureFlashcards()
+            withContext(Dispatchers.Main) {
+                onResult(list)
+            }
+        }
+    }
+
+    fun getPastFlashcardsAsync(onResult: (List<Flashcard>) -> Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val list = getPastFlashcards()
+            withContext(Dispatchers.Main) {
+                onResult(list)
             }
         }
     }

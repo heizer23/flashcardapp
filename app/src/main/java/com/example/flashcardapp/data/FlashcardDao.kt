@@ -44,6 +44,14 @@ interface FlashcardDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertCrossRef(crossRef: FlashcardTopicCrossRef)
 
+    // 1) We'll add a query to delete old crossRefs
+    @Query("DELETE FROM flashcard_topic_cross_ref WHERE flashcardId = :flashcardId")
+    fun deleteCrossRefsForFlashcard(flashcardId: Int) // changes: update
+
+    // 2) We'll add a query to actually get all topics for that flashcard
+    @Query("SELECT t.* FROM topics t INNER JOIN flashcard_topic_cross_ref fcr ON t.id = fcr.topicId WHERE fcr.flashcardId = :flashcardId")
+    fun getTopicsForFlashcard(flashcardId: Int): List<Topic> // changes: update
+
     @Query("SELECT COUNT(*) FROM flashcards WHERE nextReview <= :currentTime")
     fun getPastCount(currentTime: Long): Int
 
