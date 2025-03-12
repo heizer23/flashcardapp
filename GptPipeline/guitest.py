@@ -292,6 +292,8 @@ def main():
     # MERGE BUTTON
     # -------------------------
     def on_merge_button_clicked():
+        run_get_files_script()
+
         merge_and_copy_to_clipboard(
             second_text_content=second_text.get("1.0", tk.END),
             file_vars=file_vars,

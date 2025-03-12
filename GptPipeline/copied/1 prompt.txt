@@ -1,1 +1,1 @@
-The editflashcardactivity should create a topic from the etTopic and reference it to the flashcard. That does not work. Please pay special attention to the FlashcardTopicCrossRef and the Topic data pbject.
+It works again. Please review the code and refactor.
