@@ -1,104 +1,109 @@
-<!-- File: activity_edit_flashcard.xml -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="16dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <EditText
-        android:id="@+id/et_question"
-        android:hint="Question"
+    <!-- Scrollable area for EditTexts -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-    <EditText
-        android:id="@+id/et_answer"
-        android:hint="Answer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/et_search_term"
-        android:hint="Search Term"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
+            <!-- Question -->
+            <EditText
+                android:id="@+id/et_question"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Question"/>
 
-    <!-- User Note Section with Full Width EditText and Below Button -->
-    <EditText
-        android:id="@+id/et_user_note"
-        android:hint="User Note"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:minHeight="100dp"
-        android:maxLines="6" />
+            <!-- Answer -->
+            <EditText
+                android:id="@+id/et_answer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Answer"/>
 
+            <!-- SearchTerm -->
+            <EditText
+                android:id="@+id/et_search_term"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Search Term"/>
+
+            <!-- UserNote -->
+            <EditText
+                android:id="@+id/et_user_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="User Note"/>
+
+            <!-- Topics -->
+            <EditText
+                android:id="@+id/et_topics"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Topics (comma separated)"/>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom container for two rows of buttons -->
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp">
+        android:orientation="vertical">
 
-        <!-- Get Context Button -->
-        <Button
-            android:id="@+id/btn_context"
-            android:layout_width="0dp"
-            android:layout_weight="1"
+        <!-- First row: Context & Related Question -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Get Context" />
+            android:orientation="horizontal"
+            android:gravity="end">
 
-        <!-- Copy Button -->
-        <Button
-            android:id="@+id/btn_copy"
-            android:layout_width="0dp"
+            <Button
+                android:id="@+id/btn_context"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Context"/>
+
+            <Button
+                android:id="@+id/btn_generate_related_question"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Related Q"/>
+        </LinearLayout>
+
+        <!-- Second row: Update, Delete, Copy -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Copy"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp" />
+            android:orientation="horizontal"
+            android:gravity="end">
 
+            <Button
+                android:id="@+id/btn_update"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Update"/>
+
+            <Button
+                android:id="@+id/btn_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Delete"/>
+
+            <Button
+                android:id="@+id/btn_copy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Copy"/>
+        </LinearLayout>
     </LinearLayout>
 
-    <EditText
-        android:id="@+id/et_topics"
-        android:hint="Topics (comma-separated)"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
-
-    <!-- Bottom Button Row -->
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp">
-
-        <Button
-            android:id="@+id/btn_update"
-            android:text="Update"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
-        <Button
-            android:id="@+id/btn_delete"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Delete"
-            android:backgroundTint="@android:color/holo_red_dark"
-            android:textColor="@android:color/white"
-            android:layout_weight="1"/>
-
-
-        <Button
-            android:id="@+id/btn_generate_related_question"
-            android:text="Generate"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-             />
-    </LinearLayout>
 </LinearLayout>
-
