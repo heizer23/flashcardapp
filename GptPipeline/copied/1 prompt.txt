@@ -1,1 +1,1 @@
-When the etQuestion or etAnswer in EditFlashcardActivity get too long the buttons at the botton are no longer visible. Can we update the layout so that the scrolling does not contain the buttons? They should always be at the bottom
+Please update the ListFlashCardActivity so that clicking on the column names sort by that field.

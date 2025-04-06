@@ -16,27 +16,25 @@ public class FlashcardUtils {
         try {
             JSONArray questionsArray = new JSONArray(jsonString);
 
-            int length = questionsArray.length();
-
             for (int i = 0; i < questionsArray.length(); i++) {
                 JSONObject questionObj = questionsArray.getJSONObject(i);
                 Flashcard flashcard = new Flashcard(
-                        questionObj.getString("question"),
-                        questionObj.getString("answer")
+                    questionObj.getString("question"),
+                    questionObj.getString("answer")
                 );
                 flashcard.setSearchTerm(questionObj.optString("searchTerm", ""));
                 flashcard.setUserNote(questionObj.optString("userNote", ""));
 
-                // Parse topics
+                // Parse topics from JSON
                 JSONArray topicsArray = questionObj.optJSONArray("topics");
                 if (topicsArray != null) {
-                    List<Topic> topics = new ArrayList<>();
+                    List<String> topicNames = new ArrayList<>();
                     for (int j = 0; j < topicsArray.length(); j++) {
                         String topicName = topicsArray.getString(j);
-                        topics.add(new Topic(topicName)); // Create new Topic objects with names
+                        topicNames.add(topicName);
                     }
-                    //todo get this to work again
-                 //   flashcard.setTopics(topics);
+                    // Store them in our transient property
+                    flashcard.setTopicNames(topicNames);
                 }
 
                 flashcards.add(flashcard);
