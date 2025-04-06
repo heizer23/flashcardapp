@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:padding="8dp">
 
-    <!-- Toggle button to switch between past/future flashcards -->
-    <ToggleButton
-        android:id="@+id/toggle_review_time"
+    <!-- Spinner to choose filter (Past, Future, All) -->
+    <Spinner
+        android:id="@+id/spinner_filter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textOff="Show Future"
-        android:textOn="Show Past"
+        android:layout_gravity="center_horizontal"
+        android:padding="8dp" />
+
+    <!-- Button to go back to topics -->
+    <Button
+        android:id="@+id/btn_go_topics"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go to Topics"
         android:layout_gravity="center_horizontal"
         android:padding="8dp" />
 

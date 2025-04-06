@@ -64,4 +64,8 @@ interface FlashcardDao {
 
     @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1 AND f.nextReview > :currentTime\n           ORDER BY f.nextReview ASC")
     fun getFutureFlashcardsForSelectedTopics(currentTime: Long): List<Flashcard> // changes: update
+
+    // changes: update
+    @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1\n           ORDER BY f.nextReview ASC")
+    fun getAllFlashcardsForSelectedTopics(): List<Flashcard>
 }
