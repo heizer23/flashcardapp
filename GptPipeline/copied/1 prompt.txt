@@ -1,1 +1,1 @@
-In the listviewactivity can you please include a button to take me back to the topicsactivity
+Can you look at my code and tell me if there is something I should refactor? Please focus on the main funtionalities. Thiis time you do not need to keep the changes small but could rewrite as much as you deem helpful

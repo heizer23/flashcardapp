@@ -44,11 +44,9 @@ interface FlashcardDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertCrossRef(crossRef: FlashcardTopicCrossRef)
 
-    // 1) We'll add a query to delete old crossRefs
     @Query("DELETE FROM flashcard_topic_cross_ref WHERE flashcardId = :flashcardId")
     fun deleteCrossRefsForFlashcard(flashcardId: Int)
 
-    // 2) We'll add a query to actually get all topics for that flashcard
     @Query("SELECT t.* FROM topics t INNER JOIN flashcard_topic_cross_ref fcr ON t.id = fcr.topicId WHERE fcr.flashcardId = :flashcardId")
     fun getTopicsForFlashcard(flashcardId: Int): List<Topic>
 
@@ -58,14 +56,22 @@ interface FlashcardDao {
     @Query("SELECT COUNT(*) FROM flashcards WHERE nextReview > :currentTime")
     fun getFutureCount(currentTime: Long): Int
 
-    // NEW QUERIES: Only selected topics
     @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1 AND f.nextReview <= :currentTime\n           ORDER BY f.nextReview DESC")
-    fun getPastFlashcardsForSelectedTopics(currentTime: Long): List<Flashcard> // changes: update
+    fun getPastFlashcardsForSelectedTopics(currentTime: Long): List<Flashcard>
 
     @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1 AND f.nextReview > :currentTime\n           ORDER BY f.nextReview ASC")
-    fun getFutureFlashcardsForSelectedTopics(currentTime: Long): List<Flashcard> // changes: update
+    fun getFutureFlashcardsForSelectedTopics(currentTime: Long): List<Flashcard>
 
-    // changes: update
     @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1\n           ORDER BY f.nextReview ASC")
     fun getAllFlashcardsForSelectedTopics(): List<Flashcard>
+
+    // changes: create new single query for topics plus count
+    @Query("""
+        SELECT t.id, t.name, t.selected, COUNT(x.flashcardId) AS cardCount
+          FROM topics t
+          LEFT JOIN flashcard_topic_cross_ref x
+                 ON x.topicId = t.id
+      GROUP BY t.id
+    """)
+    fun getAllTopicsWithCount(): List<TopicWithCount>
 }
