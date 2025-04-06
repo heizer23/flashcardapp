@@ -1,1 +1,1 @@
-Please update the ListFlashCardActivity so that clicking on the column names sort by that field.
+Next to the option to toggle between future and past questions i also want to be able to see all questions.

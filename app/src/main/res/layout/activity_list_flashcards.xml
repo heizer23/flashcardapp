@@ -25,6 +25,7 @@
         android:background="?android:attr/windowBackground">
 
         <TextView
+            android:id="@+id/tv_header_question"
             android:text="Question"
             android:layout_weight="1"
             android:layout_width="0dp"
@@ -32,6 +33,7 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tv_header_answer"
             android:text="Answer"
             android:layout_weight="1"
             android:layout_width="0dp"
@@ -39,6 +41,7 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tv_header_time"
             android:text="Time Diff"
             android:layout_weight="1"
             android:layout_width="0dp"
@@ -46,6 +49,7 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tv_header_interval"
             android:text="Interval"
             android:layout_weight="1"
             android:layout_width="0dp"
