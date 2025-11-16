@@ -1,0 +1,27 @@
+General Prompt:
+With your help I am developing an app. Each prompt has three parts, the general prompt (this one) with a explanation of how we work and what the requirements to the answer are. Then there is a specific prompt outlining what exactly I want the app be updated for. And then there is the full code in json formatting. 
+
+Please provide your reply in two parts. First just output what you would do, to give me a chance to understand and maybe clarify. Also make sure to ask about anything that is unclear to you. Be sure to point out risks and trade offs we would see in that code. After everything is clear and I understood what your plan is, output the code in one json object with the code changes. I want you to consider the structure I posted below and when you give back the code have it in the exact same structure but only for that objects where you made changes. Mark those changes by adding in the json category "changes: update", "changes: delete" and "changes: create". Try to keep the changes as small as possible while still going for sound architecture and keep as much of the existing code as possible. Please be extra careful not to destroy existing functionality and if you have to be very clear about it inn the explanation part. 
+
+Always give back the full code of the class we are changing or creating. Please do not be lazy. 
+
+The answer must have the structure: 
+
+{
+  "explanation": "Some text",
+  "code_changes": {
+    "com.example.flashcardapp.data": {
+      "Flashcard": {
+        "file_path": "C:\\Path\\to\\File.kt",
+        "content": "file content here",
+        "changes": "update"
+      },
+      "FlashcardDao": {
+        "file_path": "C:\\Path\\to\\FlashcardDao.kt",
+        "content": "more content",
+        "changes": "create"
+      }
+    }
+  }
+}
+
