@@ -35,6 +35,10 @@ class FlashcardRepository(private val flashcardDao: FlashcardDao) {
         flashcardDao.getNextDueFlashcard(currentTime)
     }
 
+    suspend fun getNextDueFlashcardForSelectedTopics(currentTime: Long): Flashcard? = withContext(Dispatchers.IO) {
+        flashcardDao.getNextDueFlashcardForSelectedTopics(currentTime)
+    }
+
     suspend fun getFutureFlashcards(currentTime: Long): List<Flashcard> =
         withContext(Dispatchers.IO) {
             flashcardDao.getFutureFlashcards(currentTime)
@@ -81,6 +85,13 @@ class FlashcardRepository(private val flashcardDao: FlashcardDao) {
             intArrayOf(past, future)
         }
 
+    suspend fun getPastAndFutureQuestionsCountForSelectedTopics(currentTime: Long): IntArray =
+        withContext(Dispatchers.IO) {
+            val past = flashcardDao.getPastCountForSelectedTopics(currentTime)
+            val future = flashcardDao.getFutureCountForSelectedTopics(currentTime)
+            intArrayOf(past, future)
+        }
+
     suspend fun getPastFlashcardsForSelectedTopics(currentTime: Long): List<Flashcard> =
         withContext(Dispatchers.IO) {
             flashcardDao.getPastFlashcardsForSelectedTopics(currentTime)
@@ -93,6 +104,10 @@ class FlashcardRepository(private val flashcardDao: FlashcardDao) {
 
     suspend fun getAllFlashcardsForSelectedTopics(): List<Flashcard> = withContext(Dispatchers.IO) {
         flashcardDao.getAllFlashcardsForSelectedTopics()
+    }
+
+    suspend fun getTotalFlashcardsForSelectedTopics(): Int = withContext(Dispatchers.IO) {
+        flashcardDao.getTotalFlashcardsForSelectedTopics()
     }
 
     // changes: create or update function to handle crossRef deletion, topic creation, and linking

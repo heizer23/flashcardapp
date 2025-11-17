@@ -57,7 +57,7 @@ class FlashcardAdapter(
         val nextReviewTime = flashcard.nextReview
         val timeDifferenceMillis = nextReviewTime - currentTime
         val absTimeDifferenceMillis = kotlin.math.abs(timeDifferenceMillis)
-        var timeDifferenceText = TimeUtils.formatTimeDifference(absTimeDifferenceMillis)
+        var timeDifferenceText = TimeUtils.formatInterval(absTimeDifferenceMillis)
 
         if (timeDifferenceMillis < 0) {
             timeDifferenceText = "-$timeDifferenceText"
@@ -65,7 +65,7 @@ class FlashcardAdapter(
 
         val intervalValue = kotlin.math.abs(flashcard.interval) * 1000L
         holder.tvTimeDifference.text = timeDifferenceText
-        holder.tvInterval.text = TimeUtils.formatTimeDifference(intervalValue)
+        holder.tvInterval.text = TimeUtils.formatInterval(intervalValue)
     }
 
     override fun getItemCount(): Int {

@@ -10,14 +10,10 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import com.example.flashcardapp.R
 import com.example.flashcardapp.data.FlashcardRepository
 import com.example.flashcardapp.data.FlashcardRoomDatabase
 import com.example.flashcardapp.viewmodel.ReviewFlashcardsViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class ReviewFlashcardsActivity : AppCompatActivity() {
 
@@ -35,13 +31,10 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
     private lateinit var btnGood: Button
     private lateinit var btnPerfect: Button
 
-    // We now rely on the ViewModel to manage logic and data
     private lateinit var reviewViewModel: ReviewFlashcardsViewModel
 
     private val editFlashcardLauncher: ActivityResultLauncher<Intent> =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            // If user edited flashcard, we might want to refresh. For now, we just do nothing special.
-        }
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,14 +57,8 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
         findViewById<View>(R.id.low_confidence_buttons).visibility = View.GONE
         findViewById<View>(R.id.high_confidence_buttons).visibility = View.GONE
 
-        // Obtain repository
-        val repo = FlashcardRepository(
-            FlashcardRoomDatabase.getDatabase(applicationContext).flashcardDao()
-        )
+        val repo = FlashcardRepository(FlashcardRoomDatabase.getDatabase(applicationContext).flashcardDao())
 
-        // Initialize ViewModel with the repository
-        // We'll do so using the standard ViewModelProvider factory approach.
-        // For a fully robust approach, you'd create a custom factory. But let's keep it minimal.
         reviewViewModel = ViewModelProvider(this, object : ViewModelProvider.Factory {
             override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(ReviewFlashcardsViewModel::class.java)) {
@@ -82,7 +69,6 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
             }
         })[ReviewFlashcardsViewModel::class.java]
 
-        // Observe changes from the ViewModel
         reviewViewModel.currentFlashcard.observe(this) { fc ->
             if (fc == null) {
                 Toast.makeText(this, "No flashcards due for review!", Toast.LENGTH_SHORT).show()
@@ -92,14 +78,19 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
                 btnShowAnswer.visibility = View.VISIBLE
                 tvQuestion.text = fc.question
 
-                // Reset the confidence buttons
                 findViewById<View>(R.id.low_confidence_buttons).visibility = View.GONE
                 findViewById<View>(R.id.high_confidence_buttons).visibility = View.GONE
-
-                // Update the 'seen' count in the UI
-                val seenCount = reviewViewModel.getSeenCount()
-                tvTotalQuestions.text = seenCount.toString()
             }
+        }
+
+        reviewViewModel.lastInterval.observe(this) { interval ->
+            val formattedInterval = TimeUtils.formatInterval(interval)
+            Toast.makeText(this, "Next review in: $formattedInterval", Toast.LENGTH_LONG).show()
+        }
+
+        reviewViewModel.totalFlashcardsForSelectedTopics.observe(this) { count ->
+            val seenCount = reviewViewModel.getSeenCount()
+            tvTotalQuestions.text = "$seenCount / $count"
         }
 
         reviewViewModel.questionsMovedCount.observe(this) { count ->
@@ -115,11 +106,8 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
         }
 
         reviewViewModel.score.observe(this) { newScore ->
-            // Optional: you could show a running score somewhere in the UI.
-            // For now, we ignore or log it.
         }
 
-        // Kick off the first flashcard
         reviewViewModel.fetchNextFlashcard()
 
         tvQuestion.setOnClickListener { openEditQuestion() }
@@ -129,7 +117,6 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
             tvAnswer.text = reviewViewModel.currentFlashcard.value?.answer
             btnShowAnswer.visibility = View.GONE
 
-            // Show confidence buttons
             findViewById<View>(R.id.low_confidence_buttons).visibility = View.VISIBLE
             findViewById<View>(R.id.high_confidence_buttons).visibility = View.VISIBLE
 
