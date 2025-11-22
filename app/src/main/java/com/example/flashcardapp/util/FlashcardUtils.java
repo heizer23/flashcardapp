@@ -23,6 +23,9 @@ public class FlashcardUtils {
                     questionObj.getString("answer")
                 );
 
+                flashcard.setLevel(questionObj.optInt("level", 0));
+                flashcard.setMainItem(questionObj.optBoolean("mainItem", false));
+
                 // Parse topics from JSON
                 JSONArray topicsArray = questionObj.optJSONArray("topics");
                 if (topicsArray != null) {

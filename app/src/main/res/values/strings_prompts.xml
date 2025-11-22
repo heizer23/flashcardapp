@@ -1,32 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="prompt_generate_questions">
-        Provide a concise answer emphasizing the year, the event, and its connections to broader historical developments or trends.
+       Output:
+
+            Always return a valid JSON array.
+
+            Objects must contain:
+
+            question (string)
+
+            answer (string)
+
+            mainItem (integer: 1 = base card, 0 = non-base)
+
+            level (integer)
+
+            topics (array of strings)
+
+            Allowed topics only:
+            "Philosophy", "Art", "Spanish", "Medieval", "Modern", "Antiquity", "Civics", "Contemporary"
+            (Spanish vocab must always include "Spanish".)
+
+            mainItem rules:
+
+            1 for the base English → Spanish card (infinitive or noun with article).
+
+            0 for reverse cards, variations, phrases, conjugations, etc.
+
+            Spanish nouns:
+
+            Spanish nouns in the answer must include their article:
+            el hombre, la mujer, el agua, etc.
+
+            Spanish questions:
+
+            If the question is in Spanish, include pronunciation in the answer
+            (e.g. comer — koh-MEHR, vida — BEE-dah).
+
+            No extra commentary — JSON only.
+
+            Two short examples:
     </string>
     <string name="prompt_example_existing_questions">
-        Provide the response as a valid JSON array. Each object should have:
         [
-        {
-            \"question\": \"When was the Battle of Hastings and what was its significance in shaping the political landscape of England and Europe?\",
-            \"answer\": \"1066 marked the Norman conquest of England, linking England to continental Europe, influencing feudalism, and shaping the future of monarchy and law.\",
-            \"searchTerm\": \"Battle of Hastings significance\",
-            \"userNote\": \"Key event that reshaped English and European political dynamics.\",
-            \"topics\": [\"History\", \"England\", \"Middle Ages\"]
-        },
-        {
-            \"question\": \"When was the Magna Carta signed and how did it influence the relationship between monarchy and governance?\",
-            \"answer\": \"1215 marked the signing of the Magna Carta, limiting royal authority, inspiring constitutional developments, and reinforcing ideas of accountability.\",
-            \"searchTerm\": \"Magna Carta constitutional law\",
-            \"userNote\": \"Important for understanding the development of constitutional principles.\",
-            \"topics\": [\"History\", \"England\", \"Middle Ages\"]
-        },
-        {
-            \"question\": \"When did the fall of Constantinople occur and why is it regarded as a pivotal event in medieval history?\",
-            \"answer\": \"1453 marked the fall of Constantinople to the Ottomans, connecting the end of the Byzantine Empire to the rise of Ottoman dominance and the beginning of early modern trade shifts.\",
-            \"searchTerm\": \"Fall of Constantinople significance\",
-            \"userNote\": \"Critical for understanding the transition from medieval to early modern history.\",
-            \"topics\": [\"History\", \"Ottoman Empire\", \"Byzantine Empire\", \"Middle Ages\"]
-        }
+          {
+            "question": "to read",
+            "answer": "leer — leh-EHR",
+            "mainItem": 1,
+            "level": 1,
+            "topics": ["Spanish"]
+          },
+          {
+            "question": "mujer",
+            "answer": "woman — la mujer — moo-HEHR",
+            "mainItem": 0,
+            "level": 1,
+            "topics": ["Spanish"]
+          }
         ]
     </string>
     <string name="prompt_generate_questions_activity">
