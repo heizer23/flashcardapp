@@ -20,10 +20,10 @@ interface FlashcardDao {
     @Query("SELECT * FROM flashcards ORDER BY nextReview ASC")
     fun getAllFlashcards(): List<Flashcard>
 
-    @Query("SELECT * FROM flashcards WHERE nextReview <= :currentTime AND mainItem = 1 ORDER BY nextReview DESC LIMIT 1")
+    @Query("SELECT * FROM flashcards WHERE nextReview <= :currentTime AND mainItem = 1 ORDER BY level ASC, nextReview DESC LIMIT 1")
     fun getNextDueFlashcard(currentTime: Long): Flashcard?
 
-    @Query("SELECT DISTINCT f.* FROM flashcards f JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id JOIN topics t ON t.id = xref.topicId WHERE t.selected = 1 AND f.nextReview <= :currentTime AND f.mainItem = 1 ORDER BY f.nextReview DESC LIMIT 1")
+    @Query("SELECT DISTINCT f.* FROM flashcards f JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id JOIN topics t ON t.id = xref.topicId WHERE t.selected = 1 AND f.nextReview <= :currentTime AND f.mainItem = 1 ORDER BY f.level ASC, f.nextReview DESC LIMIT 1")
     fun getNextDueFlashcardForSelectedTopics(currentTime: Long): Flashcard?
 
     @Query("SELECT * FROM flashcards WHERE nextReview > :currentTime AND mainItem = 1 ORDER BY nextReview ASC")
@@ -55,13 +55,16 @@ interface FlashcardDao {
 
     @Query("SELECT COUNT(*) FROM flashcards WHERE nextReview <= :currentTime AND mainItem = 1")
     fun getPastCount(currentTime: Long): Int
-    
+
     @Query("SELECT COUNT(DISTINCT f.id) FROM flashcards f JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id JOIN topics t ON t.id = xref.topicId WHERE t.selected = 1 AND f.nextReview <= :currentTime AND f.mainItem = 1")
     fun getPastCountForSelectedTopics(currentTime: Long): Int
 
+    @Query("SELECT COUNT(DISTINCT f.id) FROM flashcards f JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id JOIN topics t ON t.id = xref.topicId WHERE t.selected = 1 AND f.nextReview <= :currentTime AND f.mainItem = 1 AND f.level = :level")
+    fun getDueFlashcardsCountForLevel(currentTime: Long, level: Int): Int
+
     @Query("SELECT COUNT(*) FROM flashcards WHERE nextReview > :currentTime AND mainItem = 1")
     fun getFutureCount(currentTime: Long): Int
-    
+
     @Query("SELECT COUNT(DISTINCT f.id) FROM flashcards f JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id JOIN topics t ON t.id = xref.topicId WHERE t.selected = 1 AND f.nextReview > :currentTime AND f.mainItem = 1")
     fun getFutureCountForSelectedTopics(currentTime: Long): Int
 
@@ -71,15 +74,15 @@ interface FlashcardDao {
     @Query("SELECT COUNT(id) FROM review_history WHERE question_id = :flashcardId")
     fun getReviewedCount(flashcardId: Int): Int
 
-    @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1 AND f.nextReview <= :currentTime AND f.mainItem = 1\n           ORDER BY f.nextReview DESC")
+    @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1 AND f.nextReview <= :currentTime AND f.mainItem = 1\n           ORDER BY f.level ASC, f.nextReview DESC")
     fun getPastFlashcardsForSelectedTopics(currentTime: Long): List<Flashcard>
 
-    @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1 AND f.nextReview > :currentTime AND f.mainItem = 1\n           ORDER BY f.nextReview ASC")
+    @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1 AND f.nextReview > :currentTime AND f.mainItem = 1\n           ORDER BY f.level ASC, f.nextReview ASC")
     fun getFutureFlashcardsForSelectedTopics(currentTime: Long): List<Flashcard>
 
-    @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1 AND f.mainItem = 1\n           ORDER BY f.nextReview ASC")
+    @Query("SELECT DISTINCT f.* FROM flashcards f\n           JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id\n           JOIN topics t ON t.id = xref.topicId\n           WHERE t.selected = 1 AND f.mainItem = 1\n           ORDER BY f.level ASC, f.nextReview ASC")
     fun getAllFlashcardsForSelectedTopics(): List<Flashcard>
-    
+
     @Query("SELECT COUNT(DISTINCT f.id) FROM flashcards f JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id JOIN topics t ON t.id = xref.topicId WHERE t.selected = 1 AND f.mainItem = 1")
     fun getTotalFlashcardsForSelectedTopics(): Int
 

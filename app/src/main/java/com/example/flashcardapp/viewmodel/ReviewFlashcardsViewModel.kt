@@ -29,6 +29,12 @@ class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : V
     private val _todaysReviewedCount = MutableLiveData<Int>(0)
     val todaysReviewedCount: LiveData<Int> get() = _todaysReviewedCount
 
+    private val _dueFlashcardsForLevel = MutableLiveData<Int>(0)
+    val dueFlashcardsForLevel: LiveData<Int> get() = _dueFlashcardsForLevel
+
+    private val _currentLevel = MutableLiveData<Int>(0)
+    val currentLevel: LiveData<Int> get() = _currentLevel
+
     private val _questionsMovedCount = MutableLiveData<Int>(0)
     val questionsMovedCount: LiveData<Int> get() = _questionsMovedCount
 
@@ -53,13 +59,16 @@ class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : V
             val todaysCount = repository.getTodaysReviewedFlashcardCount()
             val lastReviewed = nextCard?.let { repository.getLastReviewedTimestamp(it.id) }
             val reviewedCount = nextCard?.let { repository.getReviewedCount(it.id) }
+            val dueForLevel = nextCard?.let { repository.getDueFlashcardsCountForLevel(System.currentTimeMillis(), it.level) } ?: 0
             withContext(Dispatchers.Main) {
                 _totalFlashcardsForSelectedTopics.value = totalCount
                 _todaysReviewedCount.value = todaysCount
                 _lastReviewedTimestamp.value = lastReviewed
                 _reviewedCount.value = reviewedCount ?: 0
+                _dueFlashcardsForLevel.value = dueForLevel
                 if (nextCard != null) {
                     _currentFlashcard.value = nextCard
+                    _currentLevel.value = nextCard.level
                 } else {
                     _currentFlashcard.value = null
                 }

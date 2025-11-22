@@ -19,6 +19,8 @@ import java.util.Date
 class ReviewFlashcardsActivity : AppCompatActivity() {
 
     private lateinit var tvTotalQuestions: TextView
+    private lateinit var tvDueForLevel: TextView
+    private lateinit var tvCurrentLevel: TextView
     private lateinit var tvQuestionsMoved: TextView
     private lateinit var tvPast: TextView
     private lateinit var tvFuture: TextView
@@ -42,6 +44,8 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_review_flashcards)
 
         tvTotalQuestions = findViewById(R.id.tv_total_questions)
+        tvDueForLevel = findViewById(R.id.tv_due_for_level)
+        tvCurrentLevel = findViewById(R.id.tv_current_level)
         tvQuestionsMoved = findViewById(R.id.tv_questions_moved)
         tvPast = findViewById(R.id.tv_past_questions)
         tvFuture = findViewById(R.id.tv_future_questions)
@@ -106,6 +110,14 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
             reviewViewModel.todaysReviewedCount.observe(this) { seenCount ->
                 tvTotalQuestions.text = "$seenCount / $count"
             }
+        }
+
+        reviewViewModel.dueFlashcardsForLevel.observe(this) { count ->
+            tvDueForLevel.text = "($count)"
+        }
+
+        reviewViewModel.currentLevel.observe(this) { level ->
+            tvCurrentLevel.text = "Lvl: $level"
         }
 
         reviewViewModel.questionsMovedCount.observe(this) { count ->

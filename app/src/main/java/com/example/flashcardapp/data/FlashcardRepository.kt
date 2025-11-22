@@ -93,6 +93,10 @@ class FlashcardRepository(private val flashcardDao: FlashcardDao) {
             intArrayOf(past, future)
         }
 
+    suspend fun getDueFlashcardsCountForLevel(currentTime: Long, level: Int): Int = withContext(Dispatchers.IO) {
+        flashcardDao.getDueFlashcardsCountForLevel(currentTime, level)
+    }
+
     suspend fun getLastReviewedTimestamp(flashcardId: Int): Long? = withContext(Dispatchers.IO) {
         flashcardDao.getLastReviewedTimestamp(flashcardId)
     }
