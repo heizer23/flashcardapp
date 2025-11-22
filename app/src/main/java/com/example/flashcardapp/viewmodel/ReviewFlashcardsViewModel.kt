@@ -10,6 +10,7 @@ import com.example.flashcardapp.data.ReviewHistory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.max
 
 class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : ViewModel() {
 
@@ -18,6 +19,12 @@ class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : V
 
     private val _lastInterval = MutableLiveData<Long>()
     val lastInterval: LiveData<Long> get() = _lastInterval
+
+    private val _lastReviewedTimestamp = MutableLiveData<Long?>()
+    val lastReviewedTimestamp: LiveData<Long?> get() = _lastReviewedTimestamp
+
+    private val _reviewedCount = MutableLiveData<Int>()
+    val reviewedCount: LiveData<Int> get() = _reviewedCount
 
     private val _todaysReviewedCount = MutableLiveData<Int>(0)
     val todaysReviewedCount: LiveData<Int> get() = _todaysReviewedCount
@@ -44,9 +51,13 @@ class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : V
             val nextCard = repository.getNextDueFlashcardForSelectedTopics(System.currentTimeMillis())
             val totalCount = repository.getTotalFlashcardsForSelectedTopics()
             val todaysCount = repository.getTodaysReviewedFlashcardCount()
+            val lastReviewed = nextCard?.let { repository.getLastReviewedTimestamp(it.id) }
+            val reviewedCount = nextCard?.let { repository.getReviewedCount(it.id) }
             withContext(Dispatchers.Main) {
                 _totalFlashcardsForSelectedTopics.value = totalCount
                 _todaysReviewedCount.value = todaysCount
+                _lastReviewedTimestamp.value = lastReviewed
+                _reviewedCount.value = reviewedCount ?: 0
                 if (nextCard != null) {
                     _currentFlashcard.value = nextCard
                 } else {
@@ -68,21 +79,34 @@ class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : V
 
         val currentTime = System.currentTimeMillis()
         val lastReviewTime = currentFc.nextReview - (currentFc.interval * 1000L)
-        var interval = currentFc.interval
+        val timeSinceLastReview = currentTime - lastReviewTime
+        var interval: Int
         var repetition = currentFc.repetition
 
         when (quality) {
-            0 -> { interval = 1; repetition = 0 }
-            1 -> { interval = 10; repetition = 0 }
-            2 -> { interval = 20; repetition = 0 }
-            3 -> { interval = 30; repetition++ }
-            4 -> { interval = 1600; repetition++ }
-            5 -> {
-                val timeLapsed = (currentTime - lastReviewTime) / 1000
-                interval = (timeLapsed * 2 + 3600).toInt()
-                repetition++
+            0 -> { // Forgot
+                interval = 1
+                repetition = 0
+                currentFc.lastAnswer = false
             }
-            else -> { interval = 30; repetition = 0 }
+            1 -> { // Okay
+                interval = max(5, ((timeSinceLastReview / 1000) * 2).toInt())
+                repetition++
+                currentFc.lastAnswer = true
+            }
+            2 -> { // Good
+                interval = max(20 * 60, ((timeSinceLastReview / 1000) * 2).toInt())
+                repetition++
+                currentFc.lastAnswer = true
+            }
+            3 -> { // Perfect
+                interval = max(24 * 60 * 60, ((timeSinceLastReview / 1000) * 3).toInt())
+                repetition++
+                currentFc.lastAnswer = true
+            }
+            else -> { // Should not happen
+                interval = currentFc.interval
+            }
         }
 
         _lastInterval.postValue(interval * 1000L)
@@ -96,7 +120,7 @@ class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : V
             question_id = currentFc.id,
             confidence_level = quality,
             timestamp = currentTime,
-            time_since_last_seen = currentTime - lastReviewTime,
+            time_since_last_seen = timeSinceLastReview,
             interval = interval,
             review_type = "review",
             answer_duration = answerDurationMillis.toInt()

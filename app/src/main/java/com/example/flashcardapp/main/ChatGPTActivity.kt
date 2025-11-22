@@ -98,8 +98,6 @@ class ChatGPTActivity : AppCompatActivity() {
                     val fc = Flashcard()
                     fc.question = questionObject.optString("question")
                     fc.answer = questionObject.optString("answer")
-                    fc.searchTerm = questionObject.optString("searchTerm")
-                    fc.userNote = questionObject.optString("userNote")
                     flashcards.add(fc)
                 }
                 // We can show them in a RecyclerView if needed.

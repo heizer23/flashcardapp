@@ -14,6 +14,7 @@ import com.example.flashcardapp.R
 import com.example.flashcardapp.data.FlashcardRepository
 import com.example.flashcardapp.data.FlashcardRoomDatabase
 import com.example.flashcardapp.viewmodel.ReviewFlashcardsViewModel
+import java.util.Date
 
 class ReviewFlashcardsActivity : AppCompatActivity() {
 
@@ -25,11 +26,11 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
     private lateinit var tvAnswer: TextView
     private lateinit var btnShowAnswer: Button
     private lateinit var btnForgot: Button
-    private lateinit var btnStruggling: Button
-    private lateinit var btnUnsure: Button
     private lateinit var btnOkay: Button
     private lateinit var btnGood: Button
     private lateinit var btnPerfect: Button
+    private lateinit var tvLastSeen: TextView
+    private lateinit var tvSeenCount: TextView
 
     private lateinit var reviewViewModel: ReviewFlashcardsViewModel
 
@@ -48,11 +49,11 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
         tvAnswer = findViewById(R.id.tv_answer)
         btnShowAnswer = findViewById(R.id.btn_show_answer)
         btnForgot = findViewById(R.id.btn_forgot)
-        btnStruggling = findViewById(R.id.btn_struggling)
-        btnUnsure = findViewById(R.id.btn_unsure)
         btnOkay = findViewById(R.id.btn_okay)
         btnGood = findViewById(R.id.btn_good)
         btnPerfect = findViewById(R.id.btn_perfect)
+        tvLastSeen = findViewById(R.id.tv_last_seen)
+        tvSeenCount = findViewById(R.id.tv_seen_count)
 
         findViewById<View>(R.id.low_confidence_buttons).visibility = View.GONE
         findViewById<View>(R.id.high_confidence_buttons).visibility = View.GONE
@@ -84,8 +85,21 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
         }
 
         reviewViewModel.lastInterval.observe(this) { interval ->
-            val formattedInterval = TimeUtils.formatInterval(interval)
+            val formattedInterval = TimeUtils.formatIntervalDetailed(interval)
             Toast.makeText(this, "Next review in: $formattedInterval", Toast.LENGTH_LONG).show()
+        }
+
+        reviewViewModel.lastReviewedTimestamp.observe(this) { timestamp ->
+            if (timestamp != null) {
+                val timePassed = System.currentTimeMillis() - timestamp
+                tvLastSeen.text = "Last seen: ${TimeUtils.formatIntervalDetailed(timePassed)}"
+            } else {
+                tvLastSeen.text = "Last seen: N/A"
+            }
+        }
+
+        reviewViewModel.reviewedCount.observe(this) { count ->
+            tvSeenCount.text = "Seen: $count times"
         }
 
         reviewViewModel.totalFlashcardsForSelectedTopics.observe(this) { count ->
@@ -125,11 +139,9 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
         }
 
         btnForgot.setOnClickListener { reviewViewModel.handleConfidence(0) }
-        btnStruggling.setOnClickListener { reviewViewModel.handleConfidence(1) }
-        btnUnsure.setOnClickListener { reviewViewModel.handleConfidence(2) }
-        btnOkay.setOnClickListener { reviewViewModel.handleConfidence(3) }
-        btnGood.setOnClickListener { reviewViewModel.handleConfidence(4) }
-        btnPerfect.setOnClickListener { reviewViewModel.handleConfidence(5) }
+        btnOkay.setOnClickListener { reviewViewModel.handleConfidence(1) }
+        btnGood.setOnClickListener { reviewViewModel.handleConfidence(2) }
+        btnPerfect.setOnClickListener { reviewViewModel.handleConfidence(3) }
     }
 
     private fun openEditQuestion() {

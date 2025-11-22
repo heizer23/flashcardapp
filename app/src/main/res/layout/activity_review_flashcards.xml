@@ -19,7 +19,10 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:padding="16dp"
-                android:weightSum="4">
+                android:weightSum="4"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <!-- Total Questions -->
                 <LinearLayout
@@ -110,16 +113,42 @@
                 </LinearLayout>
             </LinearLayout>
 
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
+            android:id="@+id/card_info_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:weightSum="2"
+            app:layout_constraintTop_toBottomOf="@id/top_card_points">
 
+            <TextView
+                android:id="@+id/tv_last_seen"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Last seen: N/A" />
+
+            <TextView
+                android:id="@+id/tv_seen_count"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Seen: 0 times" />
+        </LinearLayout>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/flashcard_card"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="16dp"
             app:strokeWidth="1dp"
             app:strokeColor="?attr/colorOutline"
             app:cardElevation="4dp"
-            app:layout_constraintTop_toBottomOf="@id/top_card_points"
-
+            app:layout_constraintTop_toBottomOf="@id/card_info_layout"
+            app:layout_constraintBottom_toTopOf="@+id/btn_show_answer"
             >
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -136,6 +165,7 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     tools:text="Sample Question Text" />
@@ -193,20 +223,13 @@
                 style="@style/Widget.Material3.Button.OutlinedButton" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_struggling"
+                android:id="@+id/btn_okay"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="Struggling"
+                android:text="Okay"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_unsure"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Unsure"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
         </LinearLayout>
 
         <LinearLayout
@@ -219,14 +242,6 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_okay"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Okay"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_good"

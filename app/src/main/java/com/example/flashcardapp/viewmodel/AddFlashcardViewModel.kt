@@ -17,17 +17,7 @@ class AddFlashcardViewModel(private val repository: FlashcardRepository) : ViewM
     fun saveFlashcard(question: String, answer: String) {
         viewModelScope.launch(Dispatchers.IO) {
             // Create new flashcard
-            val flashcard = Flashcard(
-                0,
-                question,
-                answer,
-                2.5,
-                0,
-                1,
-                System.currentTimeMillis(),
-                "",
-                ""
-            )
+            val flashcard = Flashcard(question, answer)
             // Insert into DB via repository
             repository.insertFlashcard(flashcard)
             _saveComplete.postValue(true)

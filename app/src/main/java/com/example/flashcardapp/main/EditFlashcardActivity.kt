@@ -20,8 +20,6 @@ class EditFlashcardActivity : AppCompatActivity() {
 
     private lateinit var etQuestion: EditText
     private lateinit var etAnswer: EditText
-    private lateinit var etSearchTerm: EditText
-    private lateinit var etUserNote: EditText
     private lateinit var etTopics: EditText
     private lateinit var btnUpdate: Button
     private lateinit var btnContext: Button
@@ -37,8 +35,6 @@ class EditFlashcardActivity : AppCompatActivity() {
 
         etQuestion = findViewById(R.id.et_question)
         etAnswer = findViewById(R.id.et_answer)
-        etSearchTerm = findViewById(R.id.et_search_term)
-        etUserNote = findViewById(R.id.et_user_note)
         etTopics = findViewById(R.id.et_topics)
         btnUpdate = findViewById(R.id.btn_update)
         btnDelete = findViewById(R.id.btn_delete)
@@ -62,8 +58,6 @@ class EditFlashcardActivity : AppCompatActivity() {
                 // Populate the fields
                 etQuestion.setText(fc.question)
                 etAnswer.setText(fc.answer)
-                etSearchTerm.setText(fc.searchTerm)
-                etUserNote.setText(fc.userNote)
                 // ADDING THIS LINE TO DISPLAY TOPICS
                 etTopics.setText(fc.topicNames.joinToString(", "))
             } else {
@@ -79,16 +73,12 @@ class EditFlashcardActivity : AppCompatActivity() {
         btnUpdate.setOnClickListener {
             val question = etQuestion.text.toString().trim()
             val answer = etAnswer.text.toString().trim()
-            val searchTerm = etSearchTerm.text.toString().trim()
-            val userNote = etUserNote.text.toString().trim()
             val topics = etTopics.text.toString().trim()
 
             if (question.isNotEmpty() && answer.isNotEmpty()) {
                 editFlashcardViewModel.updateFlashcard(
                     question,
                     answer,
-                    searchTerm,
-                    userNote,
                     topics
                 ) {
                     Toast.makeText(
@@ -115,27 +105,26 @@ class EditFlashcardActivity : AppCompatActivity() {
             }
         }
 
-        btnCopy.setOnClickListener {
-            val userNoteContent = etUserNote.text.toString()
-            if (userNoteContent.isNotEmpty()) {
+        btnCopy.setOnClickListener { 
+            val answerContent = etAnswer.text.toString()
+            if (answerContent.isNotEmpty()) {
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("User Note", userNoteContent)
+                val clip = ClipData.newPlainText("Answer", answerContent)
                 clipboard.setPrimaryClip(clip)
-                Toast.makeText(this, "User Note copied to clipboard", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Answer copied to clipboard", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "User Note is empty", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Answer is empty", Toast.LENGTH_SHORT).show()
             }
         }
 
         btnContext.setOnClickListener {
             val question = " \"" + etQuestion.text.toString().trim() + "\" with answer: \"" +
-                    etAnswer.text.toString().trim() + "\" and additional info: \"" +
-                    etSearchTerm.text.toString().trim() + "\"."
+                    etAnswer.text.toString().trim() + "\"."
             if (question.isNotEmpty()) {
                 ChatGPTHelper.getContextForQuestion(question, this, object : ChatGPTHelper.OnChatGPTResponse {
                     override fun onSuccess(response: String) {
                         runOnUiThread {
-                            etUserNote.setText(response)
+                            etAnswer.setText(etAnswer.text.toString() + "\n\n" + response)
                         }
                     }
 

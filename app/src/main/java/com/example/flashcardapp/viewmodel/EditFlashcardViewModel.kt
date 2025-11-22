@@ -38,16 +38,12 @@ class EditFlashcardViewModel(
     fun updateFlashcard(
         question: String,
         answer: String,
-        searchTerm: String,
-        userNote: String,
         topicNames: String,
         onComplete: () -> Unit
     ) {
         val currentFc = flashcardLiveData.value ?: return
         currentFc.question = question
         currentFc.answer = answer
-        currentFc.searchTerm = searchTerm
-        currentFc.userNote = userNote
 
         // changes: we now call one repository function for crossRef logic
         viewModelScope.launch(Dispatchers.IO) {

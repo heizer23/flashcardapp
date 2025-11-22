@@ -30,20 +30,6 @@
                 android:layout_height="wrap_content"
                 android:hint="Answer"/>
 
-            <!-- SearchTerm -->
-            <EditText
-                android:id="@+id/et_search_term"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Search Term"/>
-
-            <!-- UserNote -->
-            <EditText
-                android:id="@+id/et_user_note"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="User Note"/>
-
             <!-- Topics -->
             <EditText
                 android:id="@+id/et_topics"

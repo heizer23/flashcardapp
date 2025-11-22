@@ -3,6 +3,7 @@ package com.example.flashcardapp.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
+import androidx.room.Index
 
 @Entity(
     tableName = "review_history",
@@ -11,7 +12,8 @@ import androidx.room.ForeignKey
         parentColumns = ["id"],
         childColumns = ["question_id"],
         onDelete = ForeignKey.CASCADE
-    )]
+    )],
+    indices = [Index(value = ["question_id"])]
 )
 data class ReviewHistory(
     @PrimaryKey(autoGenerate = true) var id: Int = 0,

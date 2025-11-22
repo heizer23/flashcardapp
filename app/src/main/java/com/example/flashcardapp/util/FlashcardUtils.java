@@ -22,8 +22,6 @@ public class FlashcardUtils {
                     questionObj.getString("question"),
                     questionObj.getString("answer")
                 );
-                flashcard.setSearchTerm(questionObj.optString("searchTerm", ""));
-                flashcard.setUserNote(questionObj.optString("userNote", ""));
 
                 // Parse topics from JSON
                 JSONArray topicsArray = questionObj.optJSONArray("topics");

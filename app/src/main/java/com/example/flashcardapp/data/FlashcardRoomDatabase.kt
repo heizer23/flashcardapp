@@ -10,7 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Flashcard::class, Topic::class, FlashcardTopicCrossRef::class, ReviewHistory::class],
-    version = 14,
+    version = 16,
     exportSchema = false
 )
 abstract class FlashcardRoomDatabase : RoomDatabase() {
@@ -158,6 +158,59 @@ abstract class FlashcardRoomDatabase : RoomDatabase() {
             }
         }
 
+        // Migration from version 14 to 15
+        private val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                try {
+                    Log.d("DatabaseMigration", "Starting migration from version 14 to 15")
+
+                    // Create a new table with the correct schema
+                    database.execSQL(
+                        "CREATE TABLE IF NOT EXISTS flashcards_new (" +
+                                "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                                "question TEXT NOT NULL DEFAULT '', " +
+                                "answer TEXT NOT NULL DEFAULT '', " +
+                                "repetition INTEGER NOT NULL DEFAULT 0, " +
+                                "interval INTEGER NOT NULL DEFAULT 1, " +
+                                "nextReview INTEGER NOT NULL DEFAULT (strftime('%s','now')*1000), " +
+                                "lastAnswer INTEGER NOT NULL DEFAULT 0, " +
+                                "level INTEGER NOT NULL DEFAULT 0, " +
+                                "mainItem INTEGER NOT NULL DEFAULT 0" +
+                                ");"
+                    )
+
+                    // Copy data from old table, omitting the removed columns
+                    database.execSQL(
+                        "INSERT INTO flashcards_new (id, question, answer, repetition, interval, nextReview) " +
+                                "SELECT id, question, answer, repetition, interval, nextReview FROM flashcards;"
+                    )
+
+                    // Drop the old table and rename the new one
+                    database.execSQL("DROP TABLE flashcards;")
+                    database.execSQL("ALTER TABLE flashcards_new RENAME TO flashcards;")
+
+                    Log.d("DatabaseMigration", "Migration 14 to 15 successful")
+                } catch (e: Exception) {
+                    Log.e("DatabaseMigration", "Migration 14 to 15 failed: ${e.message}")
+                    throw e
+                }
+            }
+        }
+
+        // Migration from version 15 to 16
+        private val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                try {
+                    Log.d("DatabaseMigration", "Starting migration from version 15 to 16")
+                    database.execSQL("CREATE INDEX IF NOT EXISTS index_review_history_question_id ON review_history(question_id)")
+                    Log.d("DatabaseMigration", "Migration 15 to 16 successful")
+                } catch (e: Exception) {
+                    Log.e("DatabaseMigration", "Migration 15 to 16 failed: ${e.message}")
+                    throw e
+                }
+            }
+        }
+
         fun getDatabase(context: Context): FlashcardRoomDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -165,7 +218,7 @@ abstract class FlashcardRoomDatabase : RoomDatabase() {
                     FlashcardRoomDatabase::class.java,
                     "flashcards.db"
                 )
-                    .addMigrations(MIGRATION_12_13, MIGRATION_13_14) // Register both migrations
+                    .addMigrations(MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16) // Register all migrations
                     .build()
                 INSTANCE = instance
                 instance
