@@ -89,8 +89,9 @@ class ReviewFlashcardsActivity : AppCompatActivity() {
         }
 
         reviewViewModel.totalFlashcardsForSelectedTopics.observe(this) { count ->
-            val seenCount = reviewViewModel.getSeenCount()
-            tvTotalQuestions.text = "$seenCount / $count"
+            reviewViewModel.todaysReviewedCount.observe(this) { seenCount ->
+                tvTotalQuestions.text = "$seenCount / $count"
+            }
         }
 
         reviewViewModel.questionsMovedCount.observe(this) { count ->

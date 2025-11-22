@@ -77,6 +77,12 @@ interface FlashcardDao {
     @Query("SELECT COUNT(DISTINCT f.id) FROM flashcards f JOIN flashcard_topic_cross_ref xref ON xref.flashcardId = f.id JOIN topics t ON t.id = xref.topicId WHERE t.selected = 1")
     fun getTotalFlashcardsForSelectedTopics(): Int
 
+    @Insert
+    fun insertReviewHistory(reviewHistory: ReviewHistory): Long
+
+    @Query("SELECT COUNT(DISTINCT question_id) FROM review_history WHERE timestamp >= :startOfDay")
+    fun getTodaysReviewedFlashcardCount(startOfDay: Long): Int
+
     // changes: create new single query for topics plus count
     @Query("""
         SELECT t.id, t.name, t.selected, COUNT(x.flashcardId) AS cardCount

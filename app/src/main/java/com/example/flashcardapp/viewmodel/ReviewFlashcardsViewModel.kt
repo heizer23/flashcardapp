@@ -6,10 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.flashcardapp.data.Flashcard
 import com.example.flashcardapp.data.FlashcardRepository
+import com.example.flashcardapp.data.ReviewHistory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.HashSet
 
 class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : ViewModel() {
 
@@ -19,7 +19,8 @@ class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : V
     private val _lastInterval = MutableLiveData<Long>()
     val lastInterval: LiveData<Long> get() = _lastInterval
 
-    private val seenFlashcards = HashSet<Int>()
+    private val _todaysReviewedCount = MutableLiveData<Int>(0)
+    val todaysReviewedCount: LiveData<Int> get() = _todaysReviewedCount
 
     private val _questionsMovedCount = MutableLiveData<Int>(0)
     val questionsMovedCount: LiveData<Int> get() = _questionsMovedCount
@@ -42,11 +43,12 @@ class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : V
         viewModelScope.launch(Dispatchers.IO) {
             val nextCard = repository.getNextDueFlashcardForSelectedTopics(System.currentTimeMillis())
             val totalCount = repository.getTotalFlashcardsForSelectedTopics()
+            val todaysCount = repository.getTodaysReviewedFlashcardCount()
             withContext(Dispatchers.Main) {
                 _totalFlashcardsForSelectedTopics.value = totalCount
+                _todaysReviewedCount.value = todaysCount
                 if (nextCard != null) {
                     _currentFlashcard.value = nextCard
-                    seenFlashcards.add(nextCard.id)
                 } else {
                     _currentFlashcard.value = null
                 }
@@ -90,8 +92,19 @@ class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : V
         currentFc.nextReview = nextReview
         currentFc.repetition = repetition
 
+        val reviewHistory = ReviewHistory(
+            question_id = currentFc.id,
+            confidence_level = quality,
+            timestamp = currentTime,
+            time_since_last_seen = currentTime - lastReviewTime,
+            interval = interval,
+            review_type = "review",
+            answer_duration = answerDurationMillis.toInt()
+        )
+
         viewModelScope.launch(Dispatchers.IO) {
             repository.updateFlashcard(currentFc)
+            repository.insertReviewHistory(reviewHistory)
             val timePushed = currentFc.nextReview - System.currentTimeMillis()
             if (timePushed > 24 * 60 * 60 * 1000L) {
                 val oldValue = _questionsMovedCount.value ?: 0
@@ -111,9 +124,5 @@ class ReviewFlashcardsViewModel(private val repository: FlashcardRepository) : V
                 _futureCount.value = counts[1]
             }
         }
-    }
-
-    fun getSeenCount(): Int {
-        return seenFlashcards.size
     }
 }

@@ -2,6 +2,7 @@ package com.example.flashcardapp.data
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 class FlashcardRepository(private val flashcardDao: FlashcardDao) {
 
@@ -108,6 +109,20 @@ class FlashcardRepository(private val flashcardDao: FlashcardDao) {
 
     suspend fun getTotalFlashcardsForSelectedTopics(): Int = withContext(Dispatchers.IO) {
         flashcardDao.getTotalFlashcardsForSelectedTopics()
+    }
+
+    suspend fun insertReviewHistory(reviewHistory: ReviewHistory) = withContext(Dispatchers.IO) {
+        flashcardDao.insertReviewHistory(reviewHistory)
+    }
+
+    suspend fun getTodaysReviewedFlashcardCount(): Int = withContext(Dispatchers.IO) {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startOfDay = calendar.timeInMillis
+        flashcardDao.getTodaysReviewedFlashcardCount(startOfDay)
     }
 
     // changes: create or update function to handle crossRef deletion, topic creation, and linking
