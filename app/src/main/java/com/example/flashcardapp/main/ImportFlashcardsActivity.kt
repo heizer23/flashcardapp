@@ -7,7 +7,7 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+
 import androidx.lifecycle.ViewModelProvider
 import com.example.flashcardapp.R
 import com.example.flashcardapp.data.Flashcard
@@ -17,7 +17,7 @@ import com.example.flashcardapp.util.FlashcardUtils
 import com.example.flashcardapp.viewmodel.ImportFlashcardsViewModel
 import com.example.flashcardapp.viewmodel.ImportFlashcardsViewModelFactory
 
-class ImportFlashcardsActivity : AppCompatActivity() {
+class ImportFlashcardsActivity : BaseActivity() {
 
     private lateinit var etJsonInput: EditText
     private lateinit var btnImport: Button

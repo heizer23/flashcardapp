@@ -3,7 +3,7 @@ package com.example.flashcardapp.main
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,7 +17,7 @@ import com.example.flashcardapp.viewmodel.ImportFlashcardsViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class GenerateQuestionsActivity : AppCompatActivity() {
+class GenerateQuestionsActivity : BaseActivity() {
 
     private lateinit var btnGenerate: Button
     private lateinit var btnSave: Button

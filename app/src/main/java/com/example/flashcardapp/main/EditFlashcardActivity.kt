@@ -9,14 +9,14 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+
 import androidx.lifecycle.ViewModelProvider
 import com.example.flashcardapp.R
 import com.example.flashcardapp.data.FlashcardRoomDatabase
 import com.example.flashcardapp.viewmodel.EditFlashcardViewModel
 import com.example.flashcardapp.viewmodel.EditFlashcardViewModelFactory
 
-class EditFlashcardActivity : AppCompatActivity() {
+class EditFlashcardActivity : BaseActivity() {
 
     private lateinit var etQuestion: EditText
     private lateinit var etAnswer: EditText

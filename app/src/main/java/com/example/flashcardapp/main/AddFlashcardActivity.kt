@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+
 import androidx.lifecycle.ViewModelProvider
 import com.example.flashcardapp.R
 import com.example.flashcardapp.data.FlashcardRepository
@@ -12,7 +12,7 @@ import com.example.flashcardapp.data.FlashcardRoomDatabase
 import com.example.flashcardapp.viewmodel.AddFlashcardViewModel
 import com.example.flashcardapp.viewmodel.AddFlashcardViewModelFactory
 
-class AddFlashcardActivity : AppCompatActivity() {
+class AddFlashcardActivity : BaseActivity() {
 
     private lateinit var etQuestion: EditText
     private lateinit var etAnswer: EditText

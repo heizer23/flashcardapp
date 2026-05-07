@@ -8,7 +8,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button // changes: update
 import android.widget.Spinner
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
 
 private enum class SortField { QUESTION, ANSWER, NEXT_REVIEW, INTERVAL }
 
-class ListFlashcardsActivity : AppCompatActivity() {
+class ListFlashcardsActivity : BaseActivity() {
 
     private lateinit var flashcardRepository: FlashcardRepository
     private var flashcards: MutableList<Flashcard> = mutableListOf()

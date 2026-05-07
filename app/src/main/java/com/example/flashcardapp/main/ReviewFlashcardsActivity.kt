@@ -8,7 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
+
 import androidx.lifecycle.ViewModelProvider
 import com.example.flashcardapp.R
 import com.example.flashcardapp.data.FlashcardRepository
@@ -16,7 +16,7 @@ import com.example.flashcardapp.data.FlashcardRoomDatabase
 import com.example.flashcardapp.viewmodel.ReviewFlashcardsViewModel
 import java.util.Date
 
-class ReviewFlashcardsActivity : AppCompatActivity() {
+class ReviewFlashcardsActivity : BaseActivity() {
 
     private lateinit var tvTotalQuestions: TextView
     private lateinit var tvDueForLevel: TextView
